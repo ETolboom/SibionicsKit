@@ -494,13 +494,27 @@ public final class SibionicsSession: @unchecked Sendable {
 
         case SibionicsCommand.historyRecord:
             guard let packet = SibionicsGlucosePacket(cmd: reply.cmd, payload: reply.payload) else {
-                // Do not fail the request: a batch that cannot terminate wedges
-                // the consumer. Log the bytes, because a payload that is not a
-                // record packet is exactly what a capture needs to show.
-                logger.warning(
-                    "history reply payload of \(reply.payload.count) B is not a record packet"
-                        + " (\(Self.hex(reply.payload))) — treating it as the end of the batch"
-                )
+                // A two-byte payload is the ACK form, not a truncated packet:
+                // `04 39 <status> <detail> <cksum>`. Status 0 means the sensor
+                // had nothing to send; anything else means it refused the
+                // request, which is worth saying out loud rather than logging
+                // as an unreadable packet.
+                if reply.isAck {
+                    let status = reply.ackStatus ?? 0
+                    if status == 0 {
+                        logger.debug("history: sensor has nothing to send (ack 0)")
+                    } else {
+                        logger.warning(
+                            "history request refused: ack status \(status)"
+                                + " detail \(reply.ackDetail.map(String.init) ?? "-")"
+                        )
+                    }
+                } else {
+                    logger.warning(
+                        "history reply payload of \(reply.payload.count) B is not a record packet"
+                            + " (\(Self.hex(reply.payload))) — treating it as the end of the batch"
+                    )
+                }
                 deliverHistory(.emptyHistoryTerminator)
                 return
             }

@@ -24,6 +24,31 @@ public struct SibionicsReply: Equatable, Sendable {
 
     public var isUnauthenticatedBootstrap: Bool { raw == Self.unauthenticatedBootstrap }
 
+    /// The sensor answers many commands with the five-byte ACK form
+    /// `[04][cmd][status][error][cksum]` rather than with data. Juggluco's
+    /// `handle_ack` is explicit about the shape: it only treats a frame as an
+    /// ACK when `len == 4`, and it reads the status from the first payload byte.
+    ///
+    /// This is what the two-byte `39` replies actually are. `04 39 00 05` is
+    /// status 0 — success, nothing to send — while `04 39 01 00` is status 1,
+    /// i.e. the sensor *refusing* the request. Treating both as "no records"
+    /// was right for the consumer and wrong for the diagnosis.
+    public var isAck: Bool { payload.count == 2 }
+
+    /// `0` is success; anything else is a rejection. `2` is specifically a wrong
+    /// account id on the auth path.
+    public var ackStatus: UInt8? { isAck ? payload[payload.startIndex] : nil }
+
+    /// The byte the sensor puts after the status, which Juggluco maps through a
+    /// table into an error code.
+    public var ackDetail: UInt8? {
+        isAck ? payload[payload.startIndex + 1] : nil
+    }
+
+    /// A history request answered with a rejection rather than with records.
+    public var isRejectedHistory: Bool {
+        cmd == SibionicsCommand.historyRecord && isAck && ackStatus != 0
+    }
     /// First payload byte. For the auth ack `E2 01 00` this is `0x01`.
     public var status: UInt8? { payload.first }
 
