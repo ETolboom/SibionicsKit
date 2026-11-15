@@ -20,6 +20,10 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
     public typealias ReadingHandler = @Sendable(Reading) -> Void
     public typealias DisconnectHandler = @Sendable() -> Void
     public typealias StatusHandler = @Sendable(String) -> Void
+    /// Called for every record the sensor sends, including the ones with no
+    /// result. Those carry no value but they do prove the index exists, which is
+    /// what stops the gap detector asking for it again.
+    public typealias RecordSeenHandler = @Sendable(UInt16, Bool) -> Void
     public typealias BackfillCompleteHandler = @Sendable() -> Void
     /// Fired once, when the sensor's start time becomes known — from its clock,
     /// or learned from the first record when the clock is unavailable. Lets the
@@ -39,6 +43,7 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
     private var historyWatchdog: Task<Void, Never>?
 
     private var readingHandler: ReadingHandler?
+    private var recordSeenHandler: RecordSeenHandler?
     private var disconnectHandler: DisconnectHandler?
     private var statusHandler: StatusHandler?
     private var backfillCompleteHandler: BackfillCompleteHandler?
@@ -68,6 +73,7 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
         onDisconnect: @escaping DisconnectHandler,
         onStatus: @escaping StatusHandler = { _ in },
         onBackfillComplete: @escaping BackfillCompleteHandler = {},
+        onRecordSeen: @escaping RecordSeenHandler = { _, _ in },
         onActivationLearned: @escaping ActivationHandler = { _ in }
     ) {
         lock.withLock {
@@ -76,6 +82,7 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
             statusHandler = onStatus
             backfillCompleteHandler = onBackfillComplete
             activationHandler = onActivationLearned
+            recordSeenHandler = onRecordSeen
         }
     }
 
@@ -270,6 +277,10 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
     // MARK: - Decode
 
     private func handle(_ record: SibionicsRecord, isHistorical: Bool) {
+        // Every record counts as seen, value or not: the 0xFF01 ones index real
+        // minutes, and without this the gap detector re-requests them forever
+        // and the sensor answers `01 00` because there is nothing to send.
+        lock.withLock { recordSeenHandler }?(record.index, isHistorical)
         // A record flagged present_cstate is the sensor saying "do not use this
         // one". Drop it rather than forward a value the firmware already
         // disowned.

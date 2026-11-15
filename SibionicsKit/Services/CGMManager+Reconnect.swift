@@ -31,6 +31,9 @@ extension SibionicsCGMManager {
             onBackfillComplete: { [weak self] in
                 Task { @MainActor in self?.flushPendingBackfill() }
             },
+            onRecordSeen: { [weak self] index, isHistorical in
+                Task { @MainActor in self?.noteRecordSeen(index, isHistorical: isHistorical) }
+            },
             onActivationLearned: { [weak self] date in
                 Task { @MainActor in self?.persistActivation(date) }
             }

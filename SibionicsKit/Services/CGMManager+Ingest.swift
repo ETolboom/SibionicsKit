@@ -171,6 +171,23 @@ extension SibionicsCGMManager {
         }
     }
 
+    /// Records that an index exists, whether or not it carried a value.
+    ///
+    /// Four records in every five come back as `0xFF01` — no result — but they
+    /// still occupy real minute indices. They used to advance nothing, so the
+    /// next real value looked like it had skipped four minutes and the gap
+    /// detector asked for them; the sensor answered `01 00` because there was
+    /// nothing to send, which is where 132 of the failed history requests in one
+    /// nine-hour log came from.
+    @MainActor func noteRecordSeen(_ index: UInt16, isHistorical: Bool) {
+        // A history batch is always behind the live frontier, so only the live
+        // stream moves it.
+        guard !isHistorical, index > (state.lastIngestedSequence ?? 0) else { return }
+        var updated = state
+        updated.lastIngestedSequence = index
+        setState(updated)
+    }
+
     static func isWarmup(elapsedSeconds: TimeInterval?, warmup: TimeInterval?) -> Bool {
         guard let elapsedSeconds, let warmup else { return false }
         return elapsedSeconds < warmup
