@@ -83,8 +83,13 @@ No work planned; these close themselves by leaving the sensor attached.
   the last of these.
 * **Multi-packet history backfill on hardware.** The `last = 0` fix is newer than
   the last hardware session, so a real paged batch has not been observed yet.
-* **Reconnect durability** across days, sleep, backgrounding and reboots.
-* **Warmup (60 min)** as an actual observed transition rather than a constant.
+* **Reconnect durability** across days, sleep, backgrounding and reboots. The
+  nine-hour log already covers 92 connections, 86 of them closed by the sensor
+  itself, median 6 minutes apart — so the reconnect loop is well exercised within
+  a run, just not yet across days or a device reboot.
+* ~~**Warmup (60 min)** as an actual observed transition rather than a
+  constant.~~ **Done** — the official export starts at index 60 and the driver's
+  first realtime sample is also index 60, so 60 minutes is observed, not chosen.
 * **Trend agreement** — the driver derives its own trend from consecutive
   readings instead of trusting the vendor's 3-bit field. They should agree; if
   they do not, the 3-bit mapping is the wrong one to keep.
@@ -92,6 +97,26 @@ No work planned; these close themselves by leaving the sensor attached.
   signal loss, failure or expiry.
 
 ---
+
+## Ticked off
+
+* **Values match the official app.** 173 of 173 overlapping readings identical
+  against its own export; decode errors are what that rules out. See the README
+  section of the same name.
+* **Warmup is 60 minutes**, observed rather than assumed (export starts at
+  index 60).
+* **One value per five one-minute records**, with `0xFF01` in the gaps — 1,378 of
+  them in one nine-hour log, exactly as the export implies.
+* **The six-minute link churn** was ours, not the sensor's: the stale-link
+  watchdog was armed once per connection and never re-armed, so it closed a
+  healthy link at exactly 360 s and the driver reconnected. It is re-armed on
+  every record now. Measured after the fix: 8 minutes, zero disconnects, zero
+  refused history requests.
+* **The two-byte `39` reply is the ACK form**, not a truncated record packet:
+  `[04][cmd][status][detail][cksum]`, per Juggluco's `handle_ack`. `04 39 00 05`
+  is status 0 (success, nothing to send); `04 39 01 00` is status 1, the sensor
+  refusing. So the 132 failures were requests we should not have made — see the
+  watermark fix — rather than an unexplained firmware quirk.
 
 ## Protocol unknowns
 
@@ -101,9 +126,10 @@ Each of these is decoded but unverified, or observed but not understood.
   records — a clean baseline, but no record of what a deviation looks like. This
   is the most promising source of a real "sensor error" signal, and the reason it
   is on this list rather than in the alerts table as a certainty.
-* **The `01 00` reply** to a history request. Discovered by accident (it is what
-  a bounded `last` produces). Now handled as a batch terminator, but nothing
-  establishes whether it means "invalid range", "no data" or something else.
+* **The 32 history failures the log leaves unnamed.** They carry a
+  `SessionError` that predates the `LocalizedError` conformance, so the message
+  was `error 2`. Next capture should name it; until then any non-`01 00` history
+  failure is unexplained.
 * **`0x36` cached-record path.** Coded, never observed in a log.
 * **The `0x39` `tail` field.** Parsed, kept raw, meaning unknown.
 * **Plausibility thresholds** in `SibionicsPlausibilityGuard`. Chosen here, not

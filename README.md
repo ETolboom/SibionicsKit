@@ -379,15 +379,15 @@ actually does. What that settled:
   never performs.
 * **An empty history reply is two payload bytes** (`04 39 00 05 BE`), so a
   zero-count packet must be accepted as the terminator, not rejected as short.
-  The sensor also answers some requests with a two-byte payload that is not a
-  record packet at all; that has to end the batch rather than fail it, or the
-  consumer is left with no terminator. The bytes are logged so a capture can
-  show what it actually sent.
+  A two-byte payload is not a truncated packet: it is the five-byte ACK form
+  `[04][cmd][status][detail][cksum]`, which Juggluco's `handle_ack` reads as
+  `status 0` = success (nothing to send) versus anything else = refusal.
+  `04 39 00 05` is the success case, `04 39 01 00` a refusal. Both end the
+  batch — a batch that cannot terminate wedges the consumer — but only one of
+  them means we asked for something the sensor could answer.
 * **A history request must ask for "to the end"** — `39 <first> 00 00`. The
   official app hard-codes `0` in the second slot (`06 39 01 00 00 00 c0`), and
-  a *bounded* `last` is answered on GS3 V3 with `01 00` instead of records, so
-  Juggluco's `0xFFFF` is not interchangeable. Bound the range on our side
-  instead of in the request.
+  Juggluco's `0xFFFF` is not interchangeable.
 * **The driver's numbers match the official app exactly.** Its own export for one
   sensor was replayed through the decoder: 173 of 173 overlapping readings equal,
   and the 192-row export starts at index 60 and steps 5 minutes. Since neither
@@ -398,6 +398,61 @@ actually does. What that settled:
   trips. Backfill re-requests until the range is covered; it used to stop at the
   first batch end, which is why it looked like it only went back about an hour.
 
+### Against the official app's own export
+
+The strongest evidence so far, because it needs no protocol interpretation at
+all: the official app was asked to export its own readings for one sensor
+(`SibionicsGS3_AAC26910943L.xlsx`, sheet *Sensor Glucose*, two columns), and the
+driver's log was compared with it reading by reading.
+
+| | |
+|---|---|
+| Export covers | 192 readings, 16 hours, 5-minute grid |
+| Sensor indices | 60 … 1015 |
+| Overlap with the driver's log | 173 readings |
+| **Agreements** | **173 of 173, none different** |
+
+Three things follow from that, beyond "the numbers match":
+
+* **Warmup is 60 minutes.** The export's first row is index 60, not 0 — the
+  sensor starts indexing at activation but produces nothing worth exporting
+  until the hour is up. That turns a configurable guess into an observation.
+* **The sensor produces one value per five one-minute records.** The missing
+  minutes are not lost: they arrive as `0xFF01`
+  (`SibionicsRecord.glucoseNoResult`), which is why a nine-hour log holds 1,378
+  of them.
+* **A decode error is what this rules out.** The driver computes nothing of its
+  own, so the only way it could disagree is a wrong offset, byte order or scale
+  factor — and any of those would shift *every* value, in the same direction,
+  for all 173 points. None did.
+
+Reproduce it with `Scripts/make_official_fixture.py` (xlsx → dense binary
+fixture) and `SibionicsOfficialGlucoseTests`, which replays all 192 exported
+readings through the real decoder.
+
+### What one nine-hour session shows
+
+Mined from the log of a single overnight run (2026-11-15, 00:11–09:29 local),
+which is the only long session captured so far:
+
+* **The link was being killed by us every six minutes** — 92 connections over
+  nine hours, 86 of them ending `orderly`, median gap 364 s. That looked like the
+  sensor hanging up; it was the stale-link watchdog, armed once per connection and
+  never reset by incoming records, so it closed a perfectly healthy link exactly
+  360 s after it opened and the driver reconnected. Re-arming it on every record
+  removed both the churn and the duplicate re-reads each reconnect caused.
+* **394 realtime records** over indices 370 → 920, plus 1,378 `0xFF01` no-result
+  records — the four minutes in every five that carry no value, exactly as the
+  export implies.
+* **No faults.** Nothing tripped `SibionicsPlausibilityGuard`, `present_cstate`
+  never appeared, and the `0x36` cached-record path never occurs in this capture.
+* **History requests failed 169 times**, and 132 of those were the same bug: a
+  *bounded* `last` answered with a two-byte `01 00` (see above). That one is
+  root-caused and fixed. The remaining 32 were an unnamed `SessionError`, which
+  is what the new `LocalizedError` conformance exists to identify next time.
+
+
+
 What is left to do — activation on real hardware, alerts, and the protocol
 unknowns — is tracked in [`OPEN-ITEMS.md`](OPEN-ITEMS.md). Still unverified, in
 rough order of how much they block a claim of "working":
@@ -407,6 +462,10 @@ rough order of how much they block a claim of "working":
   capture of the *official app* doing it, never to this driver doing it. Until a
   fresh sensor is activated and goes on to stream, the first half of the sensor
   lifecycle is proven only by trace.
+* **32 history failures whose cause is still unknown.** The log has them as an
+  unnamed `SessionError`; the `LocalizedError` conformance was added so the next
+  capture says which. Until then, treat any non-`01 00` history failure as
+  unexplained.
 * **A full 14-day wear, and what the sensor does at the end of it** — whether it
   announces expiry, simply stops, or starts failing records.
 * **History backfill on hardware.** The `last = 0` fix (see above) is newer than
@@ -414,14 +473,15 @@ rough order of how much they block a claim of "working":
 * **Alerts.** Signal loss, sensor failure and expiry are now raised through
   LoopKit's pipeline (`SibionicsAlertEvaluator`), but none has ever fired for
   real, and whether the host delivers a plugin alert is its own question.
-* **Accuracy.** Nothing here is validated against blood glucose or YSI. The
-  driver computes nothing itself, so this is the sensor's accuracy rather than a
-  property of this code — see [`OPEN-ITEMS.md`](OPEN-ITEMS.md#on-accuracy).
-* The `0x36` cached-record path, the `0x39` paging `tail` field, and whether the
-  vendor's 3-bit trend matches the driver's own from consecutive readings.
-* Warmup (1 h), wear (14 d) and the plausibility thresholds in
-  `SibionicsPlausibilityGuard`, all of which are judgement calls taken from the
-  vendor's published figures or chosen here.
+* **Accuracy.** Nothing here is validated against blood glucose or YSI, and it
+  cannot be: the driver computes nothing, so that would be the sensor's accuracy
+  rather than this code's — see [`OPEN-ITEMS.md`](OPEN-ITEMS.md#on-accuracy) — and the
+  decode itself is now cross-checked against the official export above.
+* What is left on the decode side: the `0x36` cached-record path, the `0x39`
+  paging `tail` field, and whether the vendor's 3-bit trend matches the
+  driver's own derived from consecutive readings.
+* Wear (14 d) and the plausibility thresholds in `SibionicsPlausibilityGuard` are
+  judgement calls taken from the vendor's published figures or chosen here.
 
 ## Safety posture
 
