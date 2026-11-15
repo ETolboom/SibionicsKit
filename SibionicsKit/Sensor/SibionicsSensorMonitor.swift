@@ -281,6 +281,11 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
         // minutes, and without this the gap detector re-requests them forever
         // and the sensor answers `01 00` because there is nothing to send.
         lock.withLock { recordSeenHandler }?(record.index, isHistorical)
+        // The link is demonstrably alive, so the stale timer restarts here. It
+        // used to be armed once per connection and never reset, which killed a
+        // perfectly healthy link every six minutes and looked exactly like the
+        // sensor hanging up.
+        armWatchdog()
         // A record flagged present_cstate is the sensor saying "do not use this
         // one". Drop it rather than forward a value the firmware already
         // disowned.
