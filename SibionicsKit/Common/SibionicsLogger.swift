@@ -45,40 +45,99 @@ public final class SibionicsLogger: @unchecked Sendable {
         return f
     }()
 
+    /// One file per local calendar day, `sibionics_log_yyyy-MM-dd.txt`, kept
+    /// for `retainedDays` so a development run has a day-by-day trail.
+    static let retainedDays = 30
+    private static let filePrefix = "sibionics_log_"
+    private static let fileSuffix = ".txt"
+
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    /// The day the sink last wrote to; housekeeping runs when it changes.
+    private static var lastDay: String?
+
+    private static var directory: URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("sibionics", isDirectory: true)
+    }
+
+    static func fileName(for day: String) -> String { filePrefix + day + fileSuffix }
+
     private static func append(_ line: String) {
         lock.lock()
         defer { lock.unlock() }
-        let fm = FileManager.default
-        guard let dir = fm.urls(for: .documentDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("sibionics", isDirectory: true) else { return }
-        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        let current = dir.appendingPathComponent("sibionics_log.txt")
-        let previous = dir.appendingPathComponent("sibionics_log_prev.txt")
-
-        let startOfDay = Calendar.current.startOfDay(for: Date())
-        if let created = (try? fm.attributesOfItem(atPath: current.path))?[.creationDate] as? Date,
-           created < startOfDay
-        {
-            try? fm.removeItem(at: previous)
-            try? fm.moveItem(at: current, to: previous)
+        guard let dir = directory, let data = line.data(using: .utf8) else { return }
+        let day = dayFormatter.string(from: Date())
+        if day != lastDay {
+            housekeep(in: dir, today: day)
+            lastDay = day
         }
-        guard let data = line.data(using: .utf8) else { return }
-        if let handle = FileHandle(forWritingAtPath: current.path) {
+        let url = dir.appendingPathComponent(fileName(for: day))
+        if let handle = FileHandle(forWritingAtPath: url.path) {
             defer { try? handle.close() }
             _ = try? handle.seekToEnd()
             try? handle.write(contentsOf: data)
         } else {
-            fm.createFile(atPath: current.path, contents: nil, attributes: [.creationDate: startOfDay])
-            try? data.write(to: current)
+            try? data.write(to: url)
         }
+    }
+
+    /// Creates the directory, renames the old two-file rotation into dated
+    /// files, and drops days past retention.
+    private static func housekeep(in dir: URL, today: String) {
+        let fm = FileManager.default
+        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+
+        for legacy in ["sibionics_log_prev.txt", "sibionics_log.txt"] {
+            let url = dir.appendingPathComponent(legacy)
+            guard fm.fileExists(atPath: url.path) else { continue }
+            let created = (try? fm.attributesOfItem(atPath: url.path))?[.creationDate] as? Date
+            let day = created.map(dayFormatter.string(from:)) ?? today
+            let target = dir.appendingPathComponent(fileName(for: day))
+            if fm.fileExists(atPath: target.path),
+               let legacyData = try? Data(contentsOf: url),
+               let handle = FileHandle(forWritingAtPath: target.path)
+            {
+                _ = try? handle.seekToEnd()
+                try? handle.write(contentsOf: legacyData)
+                try? handle.close()
+                try? fm.removeItem(at: url)
+            } else {
+                try? fm.moveItem(at: url, to: target)
+            }
+        }
+
+        guard let cutoff = Calendar.current.date(byAdding: .day, value: -(retainedDays - 1), to: Date())
+        else { return }
+        let oldestKept = dayFormatter.string(from: cutoff)
+        for url in datedFiles(in: dir) where day(of: url) < oldestKept {
+            try? fm.removeItem(at: url)
+        }
+    }
+
+    private static func day(of url: URL) -> String {
+        String(url.lastPathComponent.dropFirst(filePrefix.count).dropLast(fileSuffix.count))
+    }
+
+    /// Dated log files, oldest first (the names sort chronologically).
+    private static func datedFiles(in dir: URL) -> [URL] {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
+        return names
+            .filter { $0.hasPrefix(filePrefix) && $0.hasSuffix(fileSuffix) && $0.count == fileName(for: "yyyy-MM-dd").count }
+            .sorted()
+            .map { dir.appendingPathComponent($0) }
     }
 
     /// Files to attach to a bug report, oldest first.
     public static func logFiles() -> [URL] {
-        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("sibionics", isDirectory: true) else { return [] }
-        return ["sibionics_log_prev.txt", "sibionics_log.txt"]
-            .map { dir.appendingPathComponent($0) }
-            .filter { FileManager.default.fileExists(atPath: $0.path) }
+        guard let dir = directory else { return [] }
+        lock.lock()
+        defer { lock.unlock() }
+        return datedFiles(in: dir)
     }
 }
