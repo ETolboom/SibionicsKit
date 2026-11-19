@@ -79,6 +79,13 @@ public final class SibionicsSession: @unchecked Sendable {
     private var recordBacklog: [SibionicsRecord] = []
     private var historyBacklog: [HistoryEvent] = []
     private static let backlogLimit = 512
+    /// The next history index this session is waiting for, or `nil` when no
+    /// request of ours is open. `ff31` is shared with every app talking to the
+    /// sensor, and a `0x39` reply carries no request id, so this is the only
+    /// way to tell our batch from one another client (the official app) asked
+    /// for. Opened by `requestHistory`, advanced by each accepted packet, and
+    /// closed by the batch end, the idle timeout or the request timeout.
+    private var historyExpected: UInt16?
     private var closed = false
     private(set) var sawUnauthenticatedBootstrap = false
     /// True once `start()` has confirmed the notification subscription.
@@ -238,6 +245,7 @@ public final class SibionicsSession: @unchecked Sendable {
             pendingReplies.removeAll()
             let history = pendingHistory
             pendingHistory = nil
+            historyExpected = nil
             return (replies, history)
         }
         replies.forEach { $0.continuation.resume(throwing: error) }
@@ -419,6 +427,9 @@ public final class SibionicsSession: @unchecked Sendable {
             let superseded = lock.withLock { () -> PendingHistory? in
                 let previous = pendingHistory
                 pendingHistory = waiter
+                historyExpected = first
+                // Anything still queued belongs to an earlier batch.
+                historyBacklog = []
                 return previous
             }
             if let superseded, !superseded.done {
@@ -446,7 +457,10 @@ public final class SibionicsSession: @unchecked Sendable {
         let shouldResume = lock.withLock { () -> Bool in
             guard !waiter.done else { return false }
             waiter.done = true
-            if pendingHistory === waiter { pendingHistory = nil }
+            if pendingHistory === waiter {
+                pendingHistory = nil
+                historyExpected = nil
+            }
             return true
         }
         guard shouldResume else { return }
@@ -501,6 +515,14 @@ public final class SibionicsSession: @unchecked Sendable {
                 // as an unreadable packet.
                 if reply.isAck {
                     let status = reply.ackStatus ?? 0
+                    guard lock.withLock({ historyExpected != nil }) else {
+                        logger.info(
+                            "ignoring history ack status \(status) detail"
+                                + " \(reply.ackDetail.map(String.init) ?? "-"): we have no request open"
+                                + " (another app on the sensor?)"
+                        )
+                        return
+                    }
                     if status == 0 {
                         logger.debug("history: sensor has nothing to send (ack 0)")
                     } else {
@@ -553,7 +575,49 @@ public final class SibionicsSession: @unchecked Sendable {
         }
     }
 
+    /// Decides whether a history packet answers *our* open request.
+    ///
+    /// The first packet may start later than asked (the sensor serves from
+    /// what it still holds); every later one must continue exactly where the
+    /// previous one ended. Anything else is another client's batch, which
+    /// shares the notify characteristic with ours: it is logged and dropped.
+    /// Dropping one of ours by mistake is self-healing — the batch then ends
+    /// short, and `SibionicsSensorMonitor.requestHistory` asks again from the
+    /// highest index it actually received.
+    private func acceptHistory(_ packet: SibionicsGlucosePacket) -> Bool {
+        let range = packet.records.first.map { first in
+            "seq=\(first.index)…\(packet.records.last?.index ?? first.index)"
+        } ?? "start=\(packet.startIndex)"
+        let verdict = lock.withLock { () -> (accepted: Bool, expected: UInt16?) in
+            guard let expected = historyExpected else { return (false, nil) }
+            if packet.isEmptyHistoryTerminator {
+                historyExpected = nil
+                return (true, expected)
+            }
+            let start = packet.records.first?.index ?? packet.startIndex
+            let isFirst = pendingHistory != nil
+            guard isFirst ? start >= expected : start == expected else { return (false, expected) }
+            if let last = packet.records.last?.index { historyExpected = last &+ 1 }
+            return (true, expected)
+        }
+        if !verdict.accepted {
+            if let expected = verdict.expected {
+                logger.info(
+                    "ignoring history packet \(range) (\(packet.records.count) records):"
+                        + " expected seq=\(expected) for our request"
+                )
+            } else {
+                logger.info(
+                    "ignoring unsolicited history packet \(range) (\(packet.records.count) records):"
+                        + " we have no request open (another app on the sensor?)"
+                )
+            }
+        }
+        return verdict.accepted
+    }
+
     private func deliverHistory(_ packet: SibionicsGlucosePacket) {
+        guard acceptHistory(packet) else { return }
         // Arm the stall timer on every packet, including the first: a batch that
         // stops after one packet must still terminate for the consumer.
         if !packet.isEmptyHistoryTerminator { armHistoryIdle() }
@@ -564,7 +628,6 @@ public final class SibionicsSession: @unchecked Sendable {
             pendingHistory = nil
             return waiter
         }
-        let isFirst = waiter != nil
         if let waiter, !waiter.done {
             waiter.done = true
             waiter.continuation.resume(returning: packet)
@@ -584,9 +647,10 @@ public final class SibionicsSession: @unchecked Sendable {
                 bufferHistory(packet.isEmptyHistoryTerminator ? .batchEnd : .packet(packet))
             }
         }
-        if !isFirst {
-            forwardRecords(packet)
-        }
+        // History never reaches the live stream: it used to be forwarded there
+        // too, which re-delivered every backfilled record after the first
+        // packet as realtime, and turned another app's sync into a burst of
+        // day-old "live" readings.
     }
 
     /// Ends the batch after a period of silence. A real terminator is preferred;
@@ -601,6 +665,7 @@ public final class SibionicsSession: @unchecked Sendable {
             let continuation = self.lock.withLock { () -> AsyncStream<HistoryEvent>.Continuation? in
                 let existing = self.historyContinuation
                 self.historyContinuation = nil
+                self.historyExpected = nil
                 return existing
             }
             guard let continuation else {
