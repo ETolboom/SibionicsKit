@@ -50,9 +50,9 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
     private var activationHandler: ActivationHandler?
     private var reportedActivation = false
 
-    private var lastLive: (sequence: UInt16, mgDL: Double, elapsed: TimeInterval)?
-    private var lastHistorical: (sequence: UInt16, mgDL: Double, elapsed: TimeInterval)?
-    private static let maxTrendGapMinutes: Double = 6
+    /// Shared by live and backfilled readings: both sit on the same index
+    /// line, so a backfilled reading is a valid neighbour for a live one.
+    private var trendTracker = SibionicsTrendTracker(maxGapMinutes: 6)
 
     /// A record index is one minute, starting at activation. If the sensor turns
     /// out to emit index 0 a minute late (as the sibling kits do), that is a
@@ -312,7 +312,7 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
         let date = base.addingTimeInterval(elapsed)
 
         let (trend, rate) = deriveTrend(
-            sequence: record.index, mgDL: mgDL, elapsed: elapsed, isHistorical: isHistorical
+            sequence: record.index, mgDL: mgDL, elapsed: elapsed
         )
 
         let reading = Reading(
@@ -326,27 +326,9 @@ public final class SibionicsSensorMonitor: @unchecked Sendable {
     }
 
     private func deriveTrend(
-        sequence: UInt16, mgDL: Double, elapsed: TimeInterval, isHistorical: Bool
+        sequence: UInt16, mgDL: Double, elapsed: TimeInterval
     ) -> (GlucoseSample.Trend, Double?) {
-        let previous = lock.withLock { () -> (sequence: UInt16, mgDL: Double, elapsed: TimeInterval)? in
-            let previous = isHistorical ? lastHistorical : lastLive
-            if isHistorical { lastHistorical = (sequence, mgDL, elapsed) }
-            else { lastLive = (sequence, mgDL, elapsed) }
-            return previous
-        }
-        guard let previous, sequence > previous.sequence else { return (.notDetermined, nil) }
-        let minutes = (elapsed - previous.elapsed) / 60
-        guard minutes > 0, minutes <= Self.maxTrendGapMinutes else { return (.notDetermined, nil) }
-        let rate = (mgDL - previous.mgDL) / minutes
-        return (Self.classify(rate), rate)
-    }
-
-    static func classify(_ rate: Double) -> GlucoseSample.Trend {
-        if rate <= -3 { return .fallingQuickly }
-        if rate <= -2 { return .falling }
-        if rate < 2 { return .stable }
-        if rate < 3 { return .rising }
-        return .risingQuickly
+        lock.withLock { trendTracker.trend(sequence: sequence, mgDL: mgDL, elapsed: elapsed) }
     }
 
     private func emitStatus(_ text: String) {
