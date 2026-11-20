@@ -13,9 +13,9 @@ Trio / Loop CGM driver for **Sibionics GS3** sensors, V3 firmware.
 
 ## On the `rust-engine` branch: the Rust driver
 
-On this branch the protocol runs in Rust: [`cgm-sibionics`](https://github.com/ETolboom/cgm-sibionics)
+On this branch the protocol runs in Rust: [`cgm-sibionics`](https://github.com/u-osaid/cgm-sibionics)
 (sans-IO, written to the OS-AID driver guideline, on the
-[`cgm-shared`](https://github.com/ETolboom/cgm-shared) contract). The Swift session,
+[`cgm-shared`](https://github.com/u-osaid/cgm-shared) contract). The Swift session,
 pairing service, monitor, trend tracker, plausibility guard, codec and cipher are gone;
 `main` keeps them.
 
