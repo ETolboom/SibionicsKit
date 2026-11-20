@@ -78,7 +78,7 @@ public final class SibionicsCGMState: ObservableObject {
         peripheralID: UUID,
         mac: String?,
         expectedSerial: String? = nil,
-        onStage: @Sendable @escaping (SibionicsPairingService.Stage) -> Void
+        onStage: @Sendable @escaping (SibionicsPairingStage) -> Void
     ) async throws {
         try await manager?.pairSensor(
             peripheralID: peripheralID, mac: mac, expectedSerial: expectedSerial,

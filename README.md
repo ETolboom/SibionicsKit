@@ -11,6 +11,35 @@ Trio / Loop CGM driver for **Sibionics GS3** sensors, V3 firmware.
 > the record semantics, ack status bytes and the BLE advertisement are not.
 > Do not let this drive insulin until someone has confirmed it on hardware.
 
+## On the `rust-engine` branch: the Rust driver
+
+On this branch the protocol runs in Rust: [`cgm-sibionics`](https://github.com/ETolboom/cgm-sibionics)
+(sans-IO, written to the OS-AID driver guideline, on the
+[`cgm-shared`](https://github.com/ETolboom/cgm-shared) contract). The Swift session,
+pairing service, monitor, trend tracker, plausibility guard, codec and cipher are gone;
+`main` keeps them.
+
+| Piece | Where |
+|---|---|
+| Protocol, pairing/activation, history, trend, plausibility, warm-up/wear, signal loss | Rust engine (`cgm-sibionics`) |
+| Bindings (UniFFI) | `cgm-sibionics/ffi`, generated into `SibionicsKit/Rust/Generated/` |
+| Host runtime: CoreBluetooth, Keychain, SecRandom, timers | `SibionicsKit/Host/SibionicsRustHost.swift` |
+| LoopKit adapter: 5-minute grid, sync id, samples, alerts, reconnect backoff | `SibionicsKit/Services/CGMManager+*.swift` |
+
+Build the Rust library before building the kit:
+
+```sh
+Scripts/build-rust.sh            # expects ../../../u-osaid/cgm-sibionics, or pass its path
+swift test                       # bindings + remaining Swift tests
+```
+
+The XCFramework (`Rust/CgmSibionicsFFI.xcframework`) is not committed. An existing
+pairing carries over: the first reconnect pairs the engine again from the stored
+peripheral, account id and start time, which never re-starts a sensor. Sync identifiers
+are unchanged (`sibionics-<mac>-<seq>`), so Trio deduplicates across the switch.
+
+Removed with the Swift codec: the `sibionics-decode` capture CLI (still on `main`).
+
 ## Why it exists
 
 Sibionics GS3 sensors are read through the vendor app, which requires a cloud

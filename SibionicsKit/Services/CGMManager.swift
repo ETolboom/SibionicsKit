@@ -22,19 +22,18 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
         didSet { notifyStateObservers() }
     }
 
-    var monitor: SibionicsSensorMonitor? {
-        // Alert evaluation is driven by `setState` and the ticker: this setter
-        // runs from non-isolated code, and the monitor coming or going always
-        // comes with a state change anyway.
-        didSet { notifyStateObservers() }
-    }
+    /// The Rust engine's host, and the adapter's bookkeeping
+    /// (`CGMManager+Engine`).
+    var engine: SibionicsRustHost?
+    var pendingCommands: [UInt32: CheckedContinuation<FfiOutcome, Error>] = [:]
+    var engineDeviceInfo: FfiDeviceInfo?
+    var engineConnected = false { didSet { notifyStateObservers() } }
 
     /// A link to the sensor is up. Read by the UI for the status row.
-    public var hasLiveLink: Bool { monitor != nil }
+    public var hasLiveLink: Bool { engineConnected }
 
     internal let logger = SibionicsLogger(category: "CgmManager")
 
-    var pairingService: SibionicsPairingService?
     public internal(set) var connectedAt: Date? { didSet { notifyStateObservers() } }
     var reconnectAttempt: Task<Void, Never>?
     private(set) var isDeleted = false
@@ -45,7 +44,6 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
 
     var pendingBackfillFrom: UInt16?
     var pendingBackfillSamples: [NewGlucoseSample] = []
-    var plausibilityGuard = SibionicsPlausibilityGuard()
 
     public var latestSample: GlucoseSample? { state.latestSample }
 
@@ -176,7 +174,6 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
         state = initialState
         recentSamples = initialState.recentSamples
         accountID = initialState.accountID ?? SibionicsKeychain.loadAccountID()
-        pairingService = SibionicsPairingService()
         if state.mac != nil {
             Task { @MainActor in self.scheduleReconnect() }
         }
@@ -219,20 +216,23 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
         cancelReconnect()
         logger.info("cgm delete: releasing BLE link")
         stopAlertTicker()
-        monitor?.disconnect()
-        monitor = nil
+        dropLink()
         await cgmManagerDelegate?.cgmManagerWantsDeletion(self)
     }
 
     @MainActor public func discardSensor() {
         cancelReconnect()
         logger.info("discard sensor: releasing BLE link (mac=\(SibionicsRedact.mac(state.mac)))")
-        monitor?.disconnect()
-        monitor = nil
         isReconnecting = false
+        engineConnected = false
+        connectedAt = nil
+        // The engine forgets the sensor (and disconnects); the sensor itself
+        // keeps running its own wear.
+        if let engine {
+            _ = try? engine.submit(.unpair)
+        }
         stopAlertTicker()
         recentSamples = []
-        plausibilityGuard = SibionicsPlausibilityGuard()
         pendingBackfillFrom = nil
         pendingBackfillSamples = []
 
@@ -299,29 +299,6 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
 
     // MARK: - Account
 
-    /// The account id the driver will authenticate with, generating one on
-    /// first use.
-    ///
-    /// There is nothing to log in to. V3 has no separate bind step, so the
-    /// activation frame's account id *is* the binding: a sensor in its factory
-    /// state takes whatever it is first given, and a value this driver picked is
-    /// therefore one it already knows. Only a sensor that the official app
-    /// activated needs an id from outside, and then it needs exactly one thing —
-    /// the value that app used.
-    @MainActor public func ensureAccountID() -> SibionicsAccountID {
-        if let stored = accountID, let parsed = try? SibionicsAccountID(stored) {
-            return parsed
-        }
-        let generated = SibionicsAccountID.generated()
-        SibionicsKeychain.saveAccountID(generated.string)
-        accountID = generated.string
-        var updated = state
-        updated.accountID = generated.string
-        setState(updated)
-        logger.info("generated a local account id (nothing was fetched); it is stored in the Keychain")
-        return generated.id
-    }
-
     /// The account id is the only per-user secret in the protocol. It is set
     /// from pairing (or by hand in Settings) and validated by re-encoding it.
     ///
@@ -338,7 +315,7 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
             updated.accountID = nil
             setState(updated)
         } else {
-            _ = try SibionicsAccountID(trimmed)
+            try SibionicsAccount.validate(trimmed)
             SibionicsKeychain.saveAccountID(trimmed)
             accountID = trimmed
             var updated = state
@@ -352,12 +329,22 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
     /// ones. Dropping it makes the normal reconnect loop try again; nothing is
     /// written to the sensor by doing so.
     @MainActor func reauthenticateAfterCredentialChange() {
-        guard state.mac != nil else { return }
-        if let monitor {
-            logger.info("credentials changed; reconnecting to re-authenticate")
-            monitor.disconnect()
-        } else {
-            scheduleReconnect()
+        guard state.mac != nil, let peripheralID = state.peripheralID else { return }
+        // The engine authenticates with the account id in its own session, so
+        // a new id needs a new `Pair`. It never starts a started sensor, and
+        // the known start time skips the question.
+        logger.info("credentials changed; pairing again to re-authenticate")
+        dropLink()
+        Task { @MainActor in
+            do {
+                try await self.pair(
+                    peripheralID: peripheralID, expectedSerial: nil,
+                    knownActivation: self.state.activatedAt, onStage: { _ in }
+                )
+            } catch {
+                self.updateStatusDetail(String(describing: error))
+                self.scheduleReconnect()
+            }
         }
     }
 }

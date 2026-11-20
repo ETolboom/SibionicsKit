@@ -7,57 +7,58 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		57410000000000000000000C /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000001 /* LoopKit.framework */; };
-		57410000000000000000000E /* SibionicsKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000003 /* SibionicsKit.framework */; };
-		57410000000000000000000F /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000001 /* LoopKit.framework */; };
-		574100000000000000000010 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000002 /* LoopKitUI.framework */; };
-		574100000000000000000012 /* SibionicsKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000003 /* SibionicsKit.framework */; };
-		574100000000000000000013 /* SibionicsKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000004 /* SibionicsKitUI.framework */; };
-		574100000000000000000015 /* SibionicsKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000003 /* SibionicsKit.framework */; };
-		574100000000000000000017 /* SibionicsKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000003 /* SibionicsKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		574100000000000000000018 /* SibionicsKitUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000004 /* SibionicsKitUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		57410000000000000000000D /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000001 /* LoopKit.framework */; };
+		57410000000000000000000E /* Rust/CgmSibionicsFFI.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000003 /* Rust/CgmSibionicsFFI.xcframework */; };
+		574100000000000000000010 /* SibionicsKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000004 /* SibionicsKit.framework */; };
+		574100000000000000000011 /* LoopKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000001 /* LoopKit.framework */; };
+		574100000000000000000012 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000002 /* LoopKitUI.framework */; };
+		574100000000000000000014 /* SibionicsKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000004 /* SibionicsKit.framework */; };
+		574100000000000000000015 /* SibionicsKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000005 /* SibionicsKitUI.framework */; };
+		574100000000000000000017 /* SibionicsKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000004 /* SibionicsKit.framework */; };
+		574100000000000000000019 /* SibionicsKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000004 /* SibionicsKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		57410000000000000000001A /* SibionicsKitUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 574100000000000000000005 /* SibionicsKitUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		57410000000000000000002A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 574100000000000000000025 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 574100000000000000000026;
-			remoteInfo = SibionicsKit;
-		};
 		57410000000000000000002C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 574100000000000000000025 /* Project object */;
+			containerPortal = 574100000000000000000027 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 574100000000000000000026;
+			remoteGlobalIDString = 574100000000000000000028;
 			remoteInfo = SibionicsKit;
 		};
 		57410000000000000000002E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 574100000000000000000025 /* Project object */;
+			containerPortal = 574100000000000000000027 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 574100000000000000000027;
-			remoteInfo = SibionicsKitUI;
+			remoteGlobalIDString = 574100000000000000000028;
+			remoteInfo = SibionicsKit;
 		};
 		574100000000000000000030 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 574100000000000000000025 /* Project object */;
+			containerPortal = 574100000000000000000027 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 574100000000000000000026;
+			remoteGlobalIDString = 574100000000000000000029;
+			remoteInfo = SibionicsKitUI;
+		};
+		574100000000000000000032 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 574100000000000000000027 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 574100000000000000000028;
 			remoteInfo = SibionicsKit;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		574100000000000000000019 /* Embed Frameworks */ = {
+		57410000000000000000001B /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				574100000000000000000017 /* SibionicsKit.framework in Embed Frameworks */,
-				574100000000000000000018 /* SibionicsKitUI.framework in Embed Frameworks */,
+				574100000000000000000019 /* SibionicsKit.framework in Embed Frameworks */,
+				57410000000000000000001A /* SibionicsKitUI.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -67,42 +68,43 @@
 /* Begin PBXFileReference section */
 		574100000000000000000001 /* LoopKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		574100000000000000000002 /* LoopKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoopKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		574100000000000000000003 /* SibionicsKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SibionicsKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		574100000000000000000004 /* SibionicsKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SibionicsKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		574100000000000000000005 /* SibionicsKitPlugin.loopplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SibionicsKitPlugin.loopplugin; sourceTree = BUILT_PRODUCTS_DIR; };
-		574100000000000000000006 /* SibionicsKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SibionicsKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		574100000000000000000003 /* Rust/CgmSibionicsFFI.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Rust/CgmSibionicsFFI.xcframework; sourceTree = SOURCE_ROOT; };
+		574100000000000000000004 /* SibionicsKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SibionicsKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		574100000000000000000005 /* SibionicsKitUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SibionicsKitUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		574100000000000000000006 /* SibionicsKitPlugin.loopplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SibionicsKitPlugin.loopplugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		574100000000000000000007 /* SibionicsKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SibionicsKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		57410000000000000000000B /* Exceptions for "SibionicsKitPlugin" folder in "SibionicsKitPlugin" target */ = {
+		57410000000000000000000C /* Exceptions for "SibionicsKitPlugin" folder in "SibionicsKitPlugin" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 574100000000000000000028 /* SibionicsKitPlugin */;
+			target = 57410000000000000000002A /* SibionicsKitPlugin */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		574100000000000000000007 /* SibionicsKit */ = {
+		574100000000000000000008 /* SibionicsKit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SibionicsKit;
 			sourceTree = "<group>";
 		};
-		574100000000000000000008 /* SibionicsKitUI */ = {
+		574100000000000000000009 /* SibionicsKitUI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SibionicsKitUI;
 			sourceTree = "<group>";
 		};
-		574100000000000000000009 /* SibionicsKitPlugin */ = {
+		57410000000000000000000A /* SibionicsKitPlugin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				57410000000000000000000B /* Exceptions for "SibionicsKitPlugin" folder in "SibionicsKitPlugin" target */,
+				57410000000000000000000C /* Exceptions for "SibionicsKitPlugin" folder in "SibionicsKitPlugin" target */,
 			);
 			path = SibionicsKitPlugin;
 			sourceTree = "<group>";
 		};
-		57410000000000000000000A /* SibionicsKitTests */ = {
+		57410000000000000000000B /* SibionicsKitTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SibionicsKitTests;
 			sourceTree = "<group>";
@@ -110,30 +112,22 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		57410000000000000000000D /* Frameworks */ = {
+		57410000000000000000000F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				57410000000000000000000C /* LoopKit.framework in Frameworks */,
+				57410000000000000000000D /* LoopKit.framework in Frameworks */,
+				57410000000000000000000E /* Rust/CgmSibionicsFFI.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		574100000000000000000011 /* Frameworks */ = {
+		574100000000000000000013 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				57410000000000000000000E /* SibionicsKit.framework in Frameworks */,
-				57410000000000000000000F /* LoopKit.framework in Frameworks */,
-				574100000000000000000010 /* LoopKitUI.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		574100000000000000000014 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				574100000000000000000012 /* SibionicsKit.framework in Frameworks */,
-				574100000000000000000013 /* SibionicsKitUI.framework in Frameworks */,
+				574100000000000000000010 /* SibionicsKit.framework in Frameworks */,
+				574100000000000000000011 /* LoopKit.framework in Frameworks */,
+				574100000000000000000012 /* LoopKitUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -141,63 +135,73 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				574100000000000000000015 /* SibionicsKit.framework in Frameworks */,
+				574100000000000000000014 /* SibionicsKit.framework in Frameworks */,
+				574100000000000000000015 /* SibionicsKitUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		574100000000000000000018 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				574100000000000000000017 /* SibionicsKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		574100000000000000000041 /* Frameworks */ = {
+		574100000000000000000043 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				574100000000000000000001 /* LoopKit.framework */,
 				574100000000000000000002 /* LoopKitUI.framework */,
+				574100000000000000000003 /* Rust/CgmSibionicsFFI.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		574100000000000000000042 /* Products */ = {
+		574100000000000000000044 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				574100000000000000000003 /* SibionicsKit.framework */,
-				574100000000000000000004 /* SibionicsKitUI.framework */,
-				574100000000000000000005 /* SibionicsKitPlugin.loopplugin */,
-				574100000000000000000006 /* SibionicsKitTests.xctest */,
+				574100000000000000000004 /* SibionicsKit.framework */,
+				574100000000000000000005 /* SibionicsKitUI.framework */,
+				574100000000000000000006 /* SibionicsKitPlugin.loopplugin */,
+				574100000000000000000007 /* SibionicsKitTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		574100000000000000000043 = {
+		574100000000000000000045 = {
 			isa = PBXGroup;
 			children = (
-				574100000000000000000007 /* SibionicsKit */,
-				574100000000000000000008 /* SibionicsKitUI */,
-				574100000000000000000009 /* SibionicsKitPlugin */,
-				57410000000000000000000A /* SibionicsKitTests */,
-				574100000000000000000041 /* Frameworks */,
-				574100000000000000000042 /* Products */,
+				574100000000000000000008 /* SibionicsKit */,
+				574100000000000000000009 /* SibionicsKitUI */,
+				57410000000000000000000A /* SibionicsKitPlugin */,
+				57410000000000000000000B /* SibionicsKitTests */,
+				574100000000000000000043 /* Frameworks */,
+				574100000000000000000044 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		57410000000000000000001C /* Headers */ = {
+		57410000000000000000001E /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		57410000000000000000001F /* Headers */ = {
+		574100000000000000000021 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		574100000000000000000022 /* Headers */ = {
+		574100000000000000000024 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -207,157 +211,157 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		574100000000000000000026 /* SibionicsKit */ = {
+		574100000000000000000028 /* SibionicsKit */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 574100000000000000000037 /* Build configuration list for PBXNativeTarget "SibionicsKit" */;
+			buildConfigurationList = 574100000000000000000039 /* Build configuration list for PBXNativeTarget "SibionicsKit" */;
 			buildPhases = (
-				57410000000000000000001C /* Headers */,
-				57410000000000000000001A /* Sources */,
-				57410000000000000000000D /* Frameworks */,
-				57410000000000000000001B /* Resources */,
+				57410000000000000000001E /* Headers */,
+				57410000000000000000001C /* Sources */,
+				57410000000000000000000F /* Frameworks */,
+				57410000000000000000001D /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				574100000000000000000007 /* SibionicsKit */,
+				574100000000000000000008 /* SibionicsKit */,
 			);
 			name = SibionicsKit;
 			packageProductDependencies = (
 			);
 			productName = SibionicsKit;
-			productReference = 574100000000000000000003 /* SibionicsKit.framework */;
+			productReference = 574100000000000000000004 /* SibionicsKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		574100000000000000000027 /* SibionicsKitUI */ = {
+		574100000000000000000029 /* SibionicsKitUI */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 57410000000000000000003A /* Build configuration list for PBXNativeTarget "SibionicsKitUI" */;
+			buildConfigurationList = 57410000000000000000003C /* Build configuration list for PBXNativeTarget "SibionicsKitUI" */;
 			buildPhases = (
-				57410000000000000000001F /* Headers */,
-				57410000000000000000001D /* Sources */,
-				574100000000000000000011 /* Frameworks */,
-				57410000000000000000001E /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				57410000000000000000002B /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				574100000000000000000008 /* SibionicsKitUI */,
-			);
-			name = SibionicsKitUI;
-			packageProductDependencies = (
-			);
-			productName = SibionicsKitUI;
-			productReference = 574100000000000000000004 /* SibionicsKitUI.framework */;
-			productType = "com.apple.product-type.framework";
-		};
-		574100000000000000000028 /* SibionicsKitPlugin */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 57410000000000000000003D /* Build configuration list for PBXNativeTarget "SibionicsKitPlugin" */;
-			buildPhases = (
-				574100000000000000000022 /* Headers */,
-				574100000000000000000020 /* Sources */,
-				574100000000000000000014 /* Frameworks */,
-				574100000000000000000021 /* Resources */,
-				574100000000000000000019 /* Embed Frameworks */,
+				574100000000000000000021 /* Headers */,
+				57410000000000000000001F /* Sources */,
+				574100000000000000000013 /* Frameworks */,
+				574100000000000000000020 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				57410000000000000000002D /* PBXTargetDependency */,
-				57410000000000000000002F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				574100000000000000000009 /* SibionicsKitPlugin */,
+				574100000000000000000009 /* SibionicsKitUI */,
+			);
+			name = SibionicsKitUI;
+			packageProductDependencies = (
+			);
+			productName = SibionicsKitUI;
+			productReference = 574100000000000000000005 /* SibionicsKitUI.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		57410000000000000000002A /* SibionicsKitPlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 57410000000000000000003F /* Build configuration list for PBXNativeTarget "SibionicsKitPlugin" */;
+			buildPhases = (
+				574100000000000000000024 /* Headers */,
+				574100000000000000000022 /* Sources */,
+				574100000000000000000016 /* Frameworks */,
+				574100000000000000000023 /* Resources */,
+				57410000000000000000001B /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				57410000000000000000002F /* PBXTargetDependency */,
+				574100000000000000000031 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				57410000000000000000000A /* SibionicsKitPlugin */,
 			);
 			name = SibionicsKitPlugin;
 			packageProductDependencies = (
 			);
 			productName = SibionicsKitPlugin;
-			productReference = 574100000000000000000005 /* SibionicsKitPlugin.loopplugin */;
+			productReference = 574100000000000000000006 /* SibionicsKitPlugin.loopplugin */;
 			productType = "com.apple.product-type.framework";
 		};
-		574100000000000000000029 /* SibionicsKitTests */ = {
+		57410000000000000000002B /* SibionicsKitTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 574100000000000000000040 /* Build configuration list for PBXNativeTarget "SibionicsKitTests" */;
+			buildConfigurationList = 574100000000000000000042 /* Build configuration list for PBXNativeTarget "SibionicsKitTests" */;
 			buildPhases = (
-				574100000000000000000023 /* Sources */,
-				574100000000000000000016 /* Frameworks */,
-				574100000000000000000024 /* Resources */,
+				574100000000000000000025 /* Sources */,
+				574100000000000000000018 /* Frameworks */,
+				574100000000000000000026 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				574100000000000000000031 /* PBXTargetDependency */,
+				574100000000000000000033 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				57410000000000000000000A /* SibionicsKitTests */,
+				57410000000000000000000B /* SibionicsKitTests */,
 			);
 			name = SibionicsKitTests;
 			packageProductDependencies = (
 			);
 			productName = SibionicsKitTests;
-			productReference = 574100000000000000000006 /* SibionicsKitTests.xctest */;
+			productReference = 574100000000000000000007 /* SibionicsKitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		574100000000000000000025 /* Project object */ = {
+		574100000000000000000027 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 			};
-			buildConfigurationList = 574100000000000000000034 /* Build configuration list for PBXProject "SibionicsKit" */;
+			buildConfigurationList = 574100000000000000000036 /* Build configuration list for PBXProject "SibionicsKit" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 574100000000000000000043;
+			mainGroup = 574100000000000000000045;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 574100000000000000000042 /* Products */;
+			productRefGroup = 574100000000000000000044 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				574100000000000000000026 /* SibionicsKit */,
-				574100000000000000000027 /* SibionicsKitUI */,
-				574100000000000000000028 /* SibionicsKitPlugin */,
-				574100000000000000000029 /* SibionicsKitTests */,
+				574100000000000000000028 /* SibionicsKit */,
+				574100000000000000000029 /* SibionicsKitUI */,
+				57410000000000000000002A /* SibionicsKitPlugin */,
+				57410000000000000000002B /* SibionicsKitTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		57410000000000000000001B /* Resources */ = {
+		57410000000000000000001D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		57410000000000000000001E /* Resources */ = {
+		574100000000000000000020 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		574100000000000000000021 /* Resources */ = {
+		574100000000000000000023 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		574100000000000000000024 /* Resources */ = {
+		574100000000000000000026 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -367,28 +371,28 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		57410000000000000000001A /* Sources */ = {
+		57410000000000000000001C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		57410000000000000000001D /* Sources */ = {
+		57410000000000000000001F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		574100000000000000000020 /* Sources */ = {
+		574100000000000000000022 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		574100000000000000000023 /* Sources */ = {
+		574100000000000000000025 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -398,30 +402,30 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		57410000000000000000002B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 574100000000000000000026 /* SibionicsKit */;
-			targetProxy = 57410000000000000000002A /* PBXContainerItemProxy */;
-		};
 		57410000000000000000002D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 574100000000000000000026 /* SibionicsKit */;
+			target = 574100000000000000000028 /* SibionicsKit */;
 			targetProxy = 57410000000000000000002C /* PBXContainerItemProxy */;
 		};
 		57410000000000000000002F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 574100000000000000000027 /* SibionicsKitUI */;
+			target = 574100000000000000000028 /* SibionicsKit */;
 			targetProxy = 57410000000000000000002E /* PBXContainerItemProxy */;
 		};
 		574100000000000000000031 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 574100000000000000000026 /* SibionicsKit */;
+			target = 574100000000000000000029 /* SibionicsKitUI */;
 			targetProxy = 574100000000000000000030 /* PBXContainerItemProxy */;
+		};
+		574100000000000000000033 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 574100000000000000000028 /* SibionicsKit */;
+			targetProxy = 574100000000000000000032 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		574100000000000000000032 /* Debug */ = {
+		574100000000000000000034 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -463,7 +467,7 @@
 			};
 			name = Debug;
 		};
-		574100000000000000000033 /* Release */ = {
+		574100000000000000000035 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -499,7 +503,7 @@
 			};
 			name = Release;
 		};
-		574100000000000000000035 /* Debug */ = {
+		574100000000000000000037 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -526,7 +530,7 @@
 			};
 			name = Debug;
 		};
-		574100000000000000000036 /* Release */ = {
+		574100000000000000000038 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -553,7 +557,7 @@
 			};
 			name = Release;
 		};
-		574100000000000000000038 /* Debug */ = {
+		57410000000000000000003A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -580,7 +584,7 @@
 			};
 			name = Debug;
 		};
-		574100000000000000000039 /* Release */ = {
+		57410000000000000000003B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -607,7 +611,7 @@
 			};
 			name = Release;
 		};
-		57410000000000000000003B /* Debug */ = {
+		57410000000000000000003D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -635,7 +639,7 @@
 			};
 			name = Debug;
 		};
-		57410000000000000000003C /* Release */ = {
+		57410000000000000000003E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -663,7 +667,7 @@
 			};
 			name = Release;
 		};
-		57410000000000000000003E /* Debug */ = {
+		574100000000000000000040 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -684,7 +688,7 @@
 			};
 			name = Debug;
 		};
-		57410000000000000000003F /* Release */ = {
+		574100000000000000000041 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -708,52 +712,52 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		574100000000000000000034 /* Build configuration list for PBXProject "SibionicsKit" */ = {
+		574100000000000000000036 /* Build configuration list for PBXProject "SibionicsKit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				574100000000000000000032 /* Debug */,
-				574100000000000000000033 /* Release */,
+				574100000000000000000034 /* Debug */,
+				574100000000000000000035 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		574100000000000000000037 /* Build configuration list for PBXNativeTarget "SibionicsKit" */ = {
+		574100000000000000000039 /* Build configuration list for PBXNativeTarget "SibionicsKit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				574100000000000000000035 /* Debug */,
-				574100000000000000000036 /* Release */,
+				574100000000000000000037 /* Debug */,
+				574100000000000000000038 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		57410000000000000000003A /* Build configuration list for PBXNativeTarget "SibionicsKitUI" */ = {
+		57410000000000000000003C /* Build configuration list for PBXNativeTarget "SibionicsKitUI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				574100000000000000000038 /* Debug */,
-				574100000000000000000039 /* Release */,
+				57410000000000000000003A /* Debug */,
+				57410000000000000000003B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		57410000000000000000003D /* Build configuration list for PBXNativeTarget "SibionicsKitPlugin" */ = {
+		57410000000000000000003F /* Build configuration list for PBXNativeTarget "SibionicsKitPlugin" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				57410000000000000000003B /* Debug */,
-				57410000000000000000003C /* Release */,
+				57410000000000000000003D /* Debug */,
+				57410000000000000000003E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		574100000000000000000040 /* Build configuration list for PBXNativeTarget "SibionicsKitTests" */ = {
+		574100000000000000000042 /* Build configuration list for PBXNativeTarget "SibionicsKitTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				57410000000000000000003E /* Debug */,
-				57410000000000000000003F /* Release */,
+				574100000000000000000040 /* Debug */,
+				574100000000000000000041 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 574100000000000000000025 /* Project object */;
+	rootObject = 574100000000000000000027 /* Project object */;
 }

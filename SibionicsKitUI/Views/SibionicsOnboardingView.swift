@@ -218,7 +218,7 @@ struct SibionicsOnboardingView: View {
         busy = false
     }
 
-    static func describe(_ stage: SibionicsPairingService.Stage) -> String {
+    static func describe(_ stage: SibionicsPairingStage) -> String {
         switch stage {
         case .discovering: return "Looking for the sensor…"
         case .connecting: return "Connecting…"

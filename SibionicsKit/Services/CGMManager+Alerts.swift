@@ -79,7 +79,12 @@ extension SibionicsCGMManager {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: UInt64(Self.alertTick * 1_000_000_000))
                 guard !Task.isCancelled, let self else { return }
-                await MainActor.run { self.evaluateAlerts() }
+                await MainActor.run {
+                    // The same tick moves the engine's clock (warm-up, wear,
+                    // signal loss).
+                    self.engine?.tick()
+                    self.evaluateAlerts()
+                }
             }
         }
     }
