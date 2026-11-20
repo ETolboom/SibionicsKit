@@ -115,9 +115,12 @@ public final class SibionicsBLEPeripheral: NSObject, SibionicsGATTTransport, @un
                     return cont.resume(throwing: PeripheralError.characteristicNotFound(characteristic))
                 }
                 if characteristic == SibionicsGATT.writeCharacteristic {
-                    self.logger.debug(
-                        "GATT write \(SibionicsDiagnostics.hex(data)) [\(withResponse ? "ack" : "no-ack")]"
-                    )
+                    // The bytes only with verbose logging: the auth frame is
+                    // the same on every connect and, with the MAC, gives away
+                    // the account id.
+                    let body = SibionicsDiagnostics.verboseBLELogging
+                        ? SibionicsDiagnostics.hex(data) : "\(data.count) B"
+                    self.logger.debug("GATT write \(body) [\(withResponse ? "ack" : "no-ack")]")
                 }
                 if !withResponse {
                     self.peripheral.writeValue(data, for: characteristicObject, type: .withoutResponse)
@@ -244,7 +247,11 @@ extension SibionicsBLEPeripheral: CBPeripheralDelegate {
                 continuation.resume(throwing: PeripheralError.readFailed(error.localizedDescription))
             } else {
                 let value = characteristic.value ?? Data()
-                logger.debug("GATT read \(uuid.uuidString) \(value.count) B: \(SibionicsDiagnostics.hex(value))")
+                // 2A25 is the MAC, the cipher key's source: redacted.
+                let body = uuid == CBUUID(string: "2A25") && !SibionicsDiagnostics.verboseBLELogging
+                    ? SibionicsRedact.mac(String(decoding: value, as: UTF8.self))
+                    : SibionicsDiagnostics.hex(value)
+                logger.debug("GATT read \(uuid.uuidString) \(value.count) B: \(body)")
                 continuation.resume(returning: value)
             }
             return

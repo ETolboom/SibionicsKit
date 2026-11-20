@@ -37,10 +37,36 @@ extension SibionicsCGMManager {
                 // Events are delivered on the main actor, which is busy here,
                 // so the outcome cannot arrive before it is awaited.
                 let id = try host.submit(command)
+                logger.debug("command \(id): \(Self.describe(command))")
                 pendingCommands[id] = continuation
             } catch {
                 continuation.resume(throwing: error)
             }
+        }
+    }
+
+    /// A command without its credential.
+    static func describe(_ command: FfiCommand) -> String {
+        switch command {
+        case .status: return "status"
+        case let .pair(_, credential, serial, known):
+            let start = known.map { "\(Date(timeIntervalSince1970: TimeInterval($0) / 1000))" } ?? "unknown"
+            return "pair (account id \(credential == nil ? "new" : "given"), serial check \(serial == nil ? "no" : "yes"), "
+                + "start \(start))"
+        case .unpair: return "unpair"
+        case let .readReadings(after): return "read readings after \(after)"
+        }
+    }
+
+    static func describe(_ state: FfiSensorState) -> String {
+        func date(_ ms: UInt64) -> Date { Date(timeIntervalSince1970: TimeInterval(ms) / 1000) }
+        switch state {
+        case let .warmingUp(until): return "warming up until \(date(until))"
+        case let .active(expires): return "active, expires \(date(expires))"
+        case .expired: return "expired"
+        case let .failed(code): return "failed (code \(code))"
+        case let .signalLost(since): return "signal lost since \(date(since))"
+        case .unknown: return "unknown"
         }
     }
 
@@ -75,12 +101,23 @@ extension SibionicsCGMManager {
     @MainActor func handle(_ event: FfiEvent) {
         switch event {
         case let .finished(id, outcome):
+            let summary: String
+            if case let .completed(.readings(readings)) = outcome {
+                summary = "\(readings.count) reading(s)"
+            } else if case .completed = outcome {
+                summary = "done"
+            } else {
+                summary = Self.describe(outcome)
+            }
+            logger.debug("command \(id) finished: \(summary)")
             pendingCommands.removeValue(forKey: id)?.resume(returning: outcome)
         case let .reading(reading):
             ingest(reading)
         case let .backfillAvailable(after):
+            logger.debug("engine: live stream skipped records after \(after); backfilling")
             backfill(after: UInt16(clamping: after))
         case let .sensorStateChanged(sensorState):
+            logger.debug("sensor state: \(Self.describe(sensorState))")
             switch sensorState {
             case .failed:
                 markSensorFailed(SibionicsSensorFault(kind: .signalImplausible))
@@ -94,17 +131,24 @@ extension SibionicsCGMManager {
             }
             evaluateAlerts()
         case let .deviceInfo(info):
+            logger.debug(
+                "device info: serial \(SibionicsRedact.mac(info.serial)) firmware \(info.firmware) "
+                    + "model \(info.model ?? "nil") variant \(info.variant) "
+                    + "start \(info.activationMs.map { "\(Date(timeIntervalSince1970: TimeInterval($0) / 1000))" } ?? "unknown")"
+            )
             engineDeviceInfo = info
             if let ms = info.activationMs {
                 persistActivation(Date(timeIntervalSince1970: TimeInterval(ms) / 1000))
             }
         case let .log(level, line):
             switch level {
-            case 3...: logger.error(line)
-            case 2: logger.warning(line)
-            default: logger.debug(line)
+            case 3...: logger.error("engine: \(line)")
+            case 2: logger.warning("engine: \(line)")
+            default: logger.debug("engine: \(line)")
             }
-        case .started, .stateChanged:
+        case let .stateChanged(engineState):
+            logger.debug("engine state: \(engineState)")
+        case .started:
             break
         }
     }

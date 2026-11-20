@@ -132,6 +132,9 @@ public final class SibionicsRustHost: @unchecked Sendable {
     private func complete(_ id: UInt32, _ completion: FfiCompletion) {
         queue.async {
             self.performing = false
+            if let note = Self.describeFailure(completion) {
+                self.logger.debug("action \(id) completed: \(note)")
+            }
             do {
                 try self.engine.handleCompletion(id: id, completion: completion)
             } catch {
@@ -157,6 +160,7 @@ public final class SibionicsRustHost: @unchecked Sendable {
     // MARK: - Actions
 
     private func perform(_ action: FfiAction) {
+        logger.debug("action \(Self.describe(action))")
         switch action {
         case let .ble(id, op):
             performBle(id, op)
@@ -219,6 +223,7 @@ public final class SibionicsRustHost: @unchecked Sendable {
                         self.complete(id, .ble(result: .done))
                     }
                 } catch {
+                    self.logger.debug("connect failed: \(error)")
                     self.complete(id, .ble(result: .disconnected))
                 }
             }
@@ -271,6 +276,42 @@ public final class SibionicsRustHost: @unchecked Sendable {
         }
     }
 
+    // MARK: - Diagnostics
+
+    /// An action without its payload: writes carry the auth frame and stores
+    /// carry the session (account id), so only sizes are logged.
+    static func describe(_ action: FfiAction) -> String {
+        switch action {
+        case let .ble(id, op):
+            switch op {
+            case .connect: return "\(id) ble connect"
+            case .disconnect: return "\(id) ble disconnect"
+            case let .read(_, c): return "\(id) ble read \(cbuuid(c).uuidString)"
+            case let .write(_, c, data): return "\(id) ble write \(cbuuid(c).uuidString) \(data.count) B"
+            case let .subscribe(_, c, _): return "\(id) ble subscribe \(cbuuid(c).uuidString)"
+            case let .unsubscribe(_, c): return "\(id) ble unsubscribe \(cbuuid(c).uuidString)"
+            case .requestFastInterval: return "\(id) ble fast interval"
+            }
+        case let .store(id, slot, _, bytes): return "\(id) store \(SibionicsRustStorage.account(slot)) \(bytes.count) B"
+        case let .load(id, slot): return "\(id) load \(SibionicsRustStorage.account(slot))"
+        case let .erase(id, slot): return "\(id) erase \(SibionicsRustStorage.account(slot))"
+        case let .wrap(id, _): return "\(id) wrap"
+        case let .unwrap(id, _): return "\(id) unwrap"
+        case let .random(id, len): return "\(id) random \(len) B"
+        case let .keyAgree(id, _, _): return "\(id) key agreement (unsupported)"
+        }
+    }
+
+    /// `nil` for the expected completions, so the log stays readable.
+    static func describeFailure(_ completion: FfiCompletion) -> String? {
+        switch completion {
+        case .ble(.done), .ble(.data), .stored, .wrapped, .secret: return nil
+        case let .loaded(bytes): return bytes == nil ? "nothing stored" : nil
+        case let .ble(result): return "ble \(result)"
+        case .failed: return "failed"
+        }
+    }
+
     /// Forwards notifications; the end of the stream is a link loss.
     private func listen(
         _ stream: AsyncStream<Data>,
@@ -291,6 +332,7 @@ public final class SibionicsRustHost: @unchecked Sendable {
             guard let self, !Task.isCancelled else { return }
             self.queue.async {
                 guard self.peripheral === peripheral else { return }
+                self.logger.debug("notify stream ended: link lost")
                 self.peripheral = nil
                 self.engine.handleLinkLost()
                 self.pump()
@@ -310,7 +352,7 @@ struct SibionicsRustStorage {
         service = "org.loopkit.SibionicsKit.rust.\(key)"
     }
 
-    private static func account(_ slot: FfiSlot) -> String {
+    static func account(_ slot: FfiSlot) -> String {
         switch slot {
         case .session: return "session"
         case .pendingSession: return "pendingSession"
