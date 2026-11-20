@@ -38,7 +38,8 @@ pairing carries over: the first reconnect pairs the engine again from the stored
 peripheral, account id and start time, which never re-starts a sensor. Sync identifiers
 are unchanged (`sibionics-<mac>-<seq>`), so Trio deduplicates across the switch.
 
-Removed with the Swift codec: the `sibionics-decode` capture CLI (still on `main`).
+The `sibionics-decode` capture decoder now lives with the driver: `cgm-sibionics/decode`
+(`cargo run -p cgm-sibionics-decode --bin sibionics-decode -- --mac … capture.pklg`).
 
 ## Why it exists
 
