@@ -157,7 +157,7 @@ struct SibionicsAccountIDEditor: View {
             try model.setAccountID(text.trimmingCharacters(in: .whitespacesAndNewlines))
             onSaved()
         } catch {
-            errorText = error is SibionicsAccountID.EncodingError
+            errorText = error is SibionicsAccount.InvalidAccountID
                 ? String(describing: error)
                 : error.localizedDescription
         }

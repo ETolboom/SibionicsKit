@@ -7,3 +7,6 @@ xcuserdata/
 .swiftpm/
 .build/
 Package.resolved
+
+# Built by Scripts/build-rust.sh
+Rust/CgmSibionicsFFI.xcframework/

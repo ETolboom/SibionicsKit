@@ -1,84 +1,94 @@
 import Foundation
 @preconcurrency import LoopKit
 
+/// Pairing through the Rust engine (`CgmCommand::Pair`). The engine connects,
+/// authenticates, checks the applicator serial, reads the sensor clock and
+/// starts the sensor only if it reports it was never started. It creates an
+/// account id when the app has none; the app keeps the one it reports.
 public extension SibionicsCGMManager {
     enum PairingError: Error, CustomStringConvertible {
         case missingAccountID
-        case service(SibionicsPairingService.Failure)
+        case driver(String)
 
         public var description: String {
             switch self {
-            case .missingAccountID:
-                return "Set your Sibionics account id first."
-            case let .service(failure): return failure.description
+            case .missingAccountID: return "Set your Sibionics account id first."
+            case let .driver(detail): return detail
             }
         }
     }
 
     func discoverSensors() async throws -> [SibionicsBLECentral.DiscoveredSensor] {
-        let service = pairingService ?? SibionicsPairingService()
-        pairingService = service
         do {
-            return try await service.discover()
-        } catch let failure as SibionicsPairingService.Failure {
-            throw PairingError.service(failure)
+            return try await SibionicsBLECentral.shared.discoverSensors()
+        } catch {
+            throw PairingError.driver(error.localizedDescription)
         }
     }
 
-    /// Connects a sensor and starts ingesting.
-    ///
-    /// Whether the sensor gets activated is decided by the sensor, not by a
-    /// setting: `F0 03` answers with `activation_time`, and only a positive zero
-    /// means factory-new. Anything else is attached read-only.
+    /// `mac` is not needed: the engine reads it from the sensor (`0x2A25`).
     @MainActor func pairSensor(
         peripheralID: UUID,
-        /// Optional: the sensor's serial number characteristic supplies the MAC
-        /// when this is nil, which is the normal case.
-        mac: String? = nil,
-        /// Product serial from an applicator tag, verified against the sensor.
+        mac _: String? = nil,
         expectedSerial: String? = nil,
-        onStage: @Sendable @escaping (SibionicsPairingService.Stage) -> Void = { _ in }
+        onStage: @Sendable @escaping (SibionicsPairingStage) -> Void = { _ in }
     ) async throws {
-        // Uses the stored id, or generates one. Generation is safe even for a
-        // sensor bound elsewhere: nothing is written until auth has succeeded.
-        let account = ensureAccountID()
+        try await pair(peripheralID: peripheralID, expectedSerial: expectedSerial, knownActivation: nil, onStage: onStage)
+    }
 
-        let service = pairingService ?? SibionicsPairingService()
-        pairingService = service
-
-        let outcome: SibionicsPairingService.Outcome
-        do {
-            outcome = try await service.attach(
-                peripheralID: peripheralID,
-                mac: mac,
-                accountID: account,
-                registrationKey: state.registrationKey,
-                warmup: state.warmup,
-                activeDuration: state.activeDuration,
-                expectedSerial: expectedSerial,
-                onStage: onStage
-            )
-        } catch let failure as SibionicsPairingService.Failure {
-            throw PairingError.service(failure)
+    /// `knownActivation` is set when re-pairing a sensor the app already
+    /// knows (reconnect without an engine session, a changed account id):
+    /// its readings and watermark are kept.
+    @MainActor internal func pair(
+        peripheralID: UUID,
+        expectedSerial: String?,
+        knownActivation: Date?,
+        onStage: @Sendable @escaping (SibionicsPairingStage) -> Void
+    ) async throws {
+        let host = try engineHost()
+        let address = host.register(peripheralID)
+        onStage(.connecting)
+        let outcome = try await run(.pair(
+            address: address,
+            credential: accountID.map { Data($0.utf8) },
+            expectedSerial: expectedSerial,
+            knownActivationMs: knownActivation.map { UInt64($0.timeIntervalSince1970 * 1000) }
+        ))
+        guard case let .completed(.paired(report)) = outcome else {
+            throw PairingError.driver(Self.describe(outcome))
         }
-
+        onStage(.startingSession)
+        if let credential = String(data: report.credential, encoding: .utf8), credential != accountID {
+            SibionicsKeychain.saveAccountID(credential)
+            accountID = credential
+        }
+        let activatedAt = report.activationMs.map { Date(timeIntervalSince1970: TimeInterval($0) / 1000) }
+        let info = engineDeviceInfo
+        let firmware = info?.firmware ?? ""
         var updated = state
-        updated.resetSensorSession()
-        plausibilityGuard = SibionicsPlausibilityGuard()
+        let samePairing = knownActivation != nil && state.peripheralID == peripheralID
+        if !samePairing { updated.resetSensorSession() }
         updated.sensors.adopt(
             SibionicsSensorRecord(
-                deviceInfo: outcome.deviceInfo,
-                peripheralID: outcome.monitor.session.peripheralID,
-                activatedAt: outcome.activatedAt,
-                serial: outcome.serial ?? expectedSerial,
-                registrationKey: state.registrationKey
+                deviceInfo: SibionicsDeviceInfo(
+                    mac: info?.serial ?? state.mac ?? "",
+                    model: info?.model,
+                    serial: report.productSerial ?? expectedSerial,
+                    softwareRevision: firmware,
+                    protocolGeneration: .v3,
+                    region: SibionicsProtocolVersion(softwareRevision: firmware, manufacturer: info?.manufacturer ?? "").region,
+                    warmup: state.warmup,
+                    activeDuration: state.activeDuration
+                ),
+                peripheralID: peripheralID,
+                activatedAt: activatedAt,
+                serial: report.productSerial ?? expectedSerial ?? state.sensors.active?.serial,
+                registrationKey: state.activeRegistrationKey
             )
         )
         setState(updated)
-        emitSensorStartEvent(for: updated)
-        // A brand-new sensor has no history worth fetching, and an existing one
-        // is starting live; backfill begins from the next gap.
-        adopt(monitor: outcome.monitor, historyFrom: nil)
+        if !samePairing { emitSensorStartEvent(for: updated) }
+        linkUp()
     }
 
     @MainActor func emitSensorStartEvent(for newState: CGMManagerState) {
@@ -97,5 +107,5 @@ public extension SibionicsCGMManager {
         }
     }
 
-    var canStartSensor: Bool { state.mac == nil && accountID != nil }
+    var canStartSensor: Bool { state.mac == nil }
 }

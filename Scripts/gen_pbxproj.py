@@ -47,6 +47,14 @@ for fw in ("LoopKit", "LoopKitUI"):
         f"path = {fw}.framework; sourceTree = BUILT_PRODUCTS_DIR; }};",
     )
 
+# ---- the cgm-sibionics Rust driver, built by Scripts/build-rust.sh ----
+rust_xcframework = uid()
+add(
+    rust_xcframework,
+    f"{rust_xcframework} /* CgmSibionicsFFI.xcframework */ = {{isa = PBXFileReference; "
+    f"lastKnownFileType = wrapper.xcframework; path = Rust/CgmSibionicsFFI.xcframework; sourceTree = SOURCE_ROOT; }};",
+)
+
 products = {
     "SibionicsKit": ("SibionicsKit.framework", "wrapper.framework"),
     "SibionicsKitUI": ("SibionicsKitUI.framework", "wrapper.framework"),
@@ -96,7 +104,10 @@ def build_file(ref, label, embed=False):
 
 
 link_map = {
-    "SibionicsKit": [(ext_frameworks["LoopKit"], "LoopKit.framework")],
+    "SibionicsKit": [
+        (ext_frameworks["LoopKit"], "LoopKit.framework"),
+        (rust_xcframework, "CgmSibionicsFFI.xcframework"),
+    ],
     "SibionicsKitUI": [
         (product_ref["SibionicsKit"], "SibionicsKit.framework"),
         (ext_frameworks["LoopKit"], "LoopKit.framework"),
@@ -358,7 +369,8 @@ frameworks_group = uid()
 add(
     frameworks_group,
     f"{frameworks_group} /* Frameworks */ = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n"
-    + arr([f"{ext_frameworks[f]} /* {f}.framework */" for f in ("LoopKit", "LoopKitUI")])
+    + arr([f"{ext_frameworks[f]} /* {f}.framework */" for f in ("LoopKit", "LoopKitUI")]
+          + [f"{rust_xcframework} /* CgmSibionicsFFI.xcframework */"])
     + '\t\t\t);\n\t\t\tname = Frameworks;\n\t\t\tsourceTree = "<group>";\n\t\t}};',
 )
 
