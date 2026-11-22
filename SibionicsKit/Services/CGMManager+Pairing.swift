@@ -8,11 +8,13 @@ import Foundation
 public extension SibionicsCGMManager {
     enum PairingError: Error, CustomStringConvertible {
         case missingAccountID
+        case accountRefused
         case driver(String)
 
         public var description: String {
             switch self {
             case .missingAccountID: return "Set your Sibionics account id first."
+            case .accountRefused: return SibionicsCGMManager.describe(FfiOutcome.failed(failure: .keyRejected))
             case let .driver(detail): return detail
             }
         }
@@ -54,6 +56,7 @@ public extension SibionicsCGMManager {
             expectedSerial: expectedSerial,
             knownActivationMs: knownActivation.map { UInt64($0.timeIntervalSince1970 * 1000) }
         ))
+        if case .failed(.keyRejected) = outcome { throw PairingError.accountRefused }
         guard case let .completed(.paired(report)) = outcome else {
             throw PairingError.driver(Self.describe(outcome))
         }

@@ -36,6 +36,13 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
 
     public internal(set) var connectedAt: Date? { didSet { notifyStateObservers() } }
     var reconnectAttempt: Task<Void, Never>?
+    /// The re-pair after an account id change. While it runs, the reconnect
+    /// loop stays out: its `Status` would log in with the old session and hide
+    /// a refusal of the new id.
+    var credentialPairings = 0
+    /// The sensor refused the account id the user entered. No reconnect with
+    /// the old session until the id changes again.
+    var credentialRefused = false
     private(set) var isDeleted = false
 
     /// Alert bookkeeping for `CGMManager+Alerts`.
@@ -334,17 +341,28 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
         // a new id needs a new `Pair`. It never starts a started sensor, and
         // the known start time skips the question.
         logger.info("credentials changed; pairing again to re-authenticate")
+        credentialRefused = false
+        credentialPairings += 1
         dropLink()
         Task { @MainActor in
+            var failure: Error?
             do {
                 try await self.pair(
                     peripheralID: peripheralID, expectedSerial: nil,
                     knownActivation: self.state.activatedAt, onStage: { _ in }
                 )
             } catch {
-                self.updateStatusDetail(String(describing: error))
+                failure = error
+            }
+            self.credentialPairings -= 1
+            guard let failure else { return }
+            if case .accountRefused? = failure as? PairingError {
+                self.credentialRefused = true
+                self.logger.info("account id refused; not reconnecting until it changes")
+            } else {
                 self.scheduleReconnect()
             }
+            self.updateStatusDetail(String(describing: failure))
         }
     }
 }

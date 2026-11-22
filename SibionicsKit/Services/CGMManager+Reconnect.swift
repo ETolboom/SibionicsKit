@@ -23,7 +23,8 @@ extension SibionicsCGMManager {
     /// account id, known start time, so `0x35` is never written. Then the
     /// readings missed since the watermark are fetched.
     @MainActor func scheduleReconnect() {
-        guard !isDeleted, !hasLiveLink, reconnectAttempt == nil else { return }
+        guard !isDeleted, !hasLiveLink, reconnectAttempt == nil,
+              credentialPairings == 0, !credentialRefused else { return }
         guard let record = state.sensors.active, let peripheralID = record.peripheralID else {
             if state.mac != nil {
                 updateStatusDetail(LocalizedString(
