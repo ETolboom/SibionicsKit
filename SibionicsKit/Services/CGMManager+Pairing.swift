@@ -87,7 +87,8 @@ public extension SibionicsCGMManager {
                 peripheralID: peripheralID,
                 activatedAt: activatedAt,
                 serial: report.productSerial ?? expectedSerial ?? state.sensors.active?.serial,
-                registrationKey: state.activeRegistrationKey
+                registrationKey: state.activeRegistrationKey,
+                pairedAt: Date()
             )
         )
         setState(updated)

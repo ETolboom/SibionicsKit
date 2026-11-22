@@ -87,7 +87,8 @@ final class SibionicsUIController: UINavigationController, CGMManagerOnboarding,
         let settings = SibionicsSettingsView(
             model: model,
             debugEnabled: debugEnabled,
-            onShowAccountID: { [weak self] in self?.showAccountID(for: model) }
+            onShowAccountID: { [weak self] in self?.showAccountID(for: model) },
+            onShowPreviousSensor: { [weak self] in self?.showPreviousSensor(for: model) }
         )
         setViewControllers(
             [hostingController(settings, title: String(localized: "Sibionics GS3"), largeTitle: true)],
@@ -105,6 +106,18 @@ final class SibionicsUIController: UINavigationController, CGMManagerOnboarding,
         }
         pushViewController(
             hostingController(editor, title: String(localized: "Account ID"), largeTitle: false),
+            animated: true
+        )
+    }
+
+    private func showPreviousSensor(for model: SibionicsCGMState) {
+        guard let record = model.previousSensor else { return }
+        pushViewController(
+            hostingController(
+                SibionicsPreviousSensorView(record: record),
+                title: String(localized: "Previous Sensor"),
+                largeTitle: false
+            ),
             animated: true
         )
     }

@@ -268,7 +268,15 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
 
     @MainActor private func clearState() {
         var blank = state
-        blank.sensors.discardActive()
+        let reason: SibionicsSensorRecord.EndReason
+        if state.sensorFault != nil {
+            reason = .failed
+        } else if let expires = sensorExpirationDate, expires <= Date() {
+            reason = .sessionEnded
+        } else {
+            reason = .ended
+        }
+        blank.sensors.discardActive(reason: reason)
         blank.resetSensorSession()
         setState(blank)
     }

@@ -17,6 +17,7 @@ struct SibionicsSettingsView: View {
     var debugEnabled = false
     /// Pushing is done by `SibionicsUIController`, which owns the navigation bar.
     var onShowAccountID: (() -> Void)?
+    var onShowPreviousSensor: (() -> Void)?
 
     @State private var pendingAction: ManagementAction?
     @State private var shareURLs: [URL] = []
@@ -26,6 +27,7 @@ struct SibionicsSettingsView: View {
         List {
             sensorStatusSection
             sensorInformationSection
+            if model.previousSensor != nil { previousSensorSection }
             accountSection
             if debugEnabled { registrationKeySection }
             if debugEnabled { debugSection }
@@ -220,18 +222,14 @@ struct SibionicsSettingsView: View {
 
     @ViewBuilder private var sensorInformationSection: some View {
         Section {
-            SibionicsSectionItem(title: Text("Model"), value: model.sensorModel)
-            if let mac = model.mac {
-                // Shown in full: it identifies the sensor, and it is printed on
-                // the packaging anyway. It is not the account id.
-                SibionicsSectionItem(title: Text("Sensor ID"), value: mac)
-            }
-            if let serial = model.sensorSerial {
-                SibionicsSectionItem(title: Text("Serial"), value: serial)
-            }
-            if let firmware = model.sensorFirmware, !firmware.isEmpty {
-                SibionicsSectionItem(title: Text("Firmware"), value: firmware)
-            }
+            // The sensor ID is shown in full: it identifies the sensor, and it
+            // is printed on the packaging anyway. It is not the account id.
+            SibionicsSensorIdentityRows(
+                model: model.sensorModel,
+                sensorID: model.mac,
+                serial: model.sensorSerial,
+                firmware: model.sensorFirmware
+            )
             SibionicsSectionItem(
                 title: Text("Started at"),
                 value: model.activatedAt.map { Self.dateTime.string(from: $0) } ?? "-"
@@ -242,6 +240,21 @@ struct SibionicsSettingsView: View {
             )
         } header: {
             Text("Sensor")
+        }
+    }
+
+    /// Unheaded, as in G7SensorKit: the sensor before this one, a page apart.
+    @ViewBuilder private var previousSensorSection: some View {
+        Section {
+            Button(action: { onShowPreviousSensor?() }) {
+                HStack {
+                    Text("Previous Sensor").foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundColor(.secondary)
+                }
+            }
         }
     }
 

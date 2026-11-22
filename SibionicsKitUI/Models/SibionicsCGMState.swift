@@ -39,6 +39,7 @@ public final class SibionicsCGMState: ObservableObject {
     public var sensorSerial: String? { managerState.sensors.active?.serial }
     public var sensorModel: String { managerState.sensors.active?.deviceInfo.model ?? "GS3" }
     public var sensorFirmware: String? { managerState.sensors.active?.deviceInfo.softwareRevision }
+    public var previousSensor: SibionicsSensorRecord? { managerState.sensors.previous }
     public var activatedAt: Date? { managerState.sensors.active?.activatedAt }
     public var expirationDate: Date? { manager?.sensorExpirationDate }
     public var hasSensor: Bool { managerState.mac != nil }
