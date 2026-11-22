@@ -124,12 +124,14 @@ extension SibionicsCGMManager {
                 // `FAILED_DEVICE + dstate`); below that, the engine's guard.
                 markSensorFailed(SibionicsSensorFault(kind: code >= 0x100 ? .sensorReported : .signalImplausible))
             case .signalLost:
-                // The stale-link watchdog: no records for six minutes means a
-                // zombie link; drop it so the reconnect starts afresh.
+                // No reading with a value for six minutes (cgm-sibionics
+                // `STALE_MS`): a dead link, or a sensor that streams without
+                // values. Drop the link so the reconnect starts afresh and
+                // re-reads the sensor, as the official app does.
                 if state.accountRefused {
-                    logger.debug("no records for six minutes; not reconnecting: account id refused")
+                    logger.debug("no reading for six minutes; not reconnecting: account id refused")
                 } else {
-                    logger.debug("no records for six minutes; forcing a reconnect")
+                    logger.debug("no reading for six minutes; forcing a reconnect")
                     engine?.disconnect()
                 }
             default:
