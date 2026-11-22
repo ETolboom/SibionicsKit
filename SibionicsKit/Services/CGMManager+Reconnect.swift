@@ -40,6 +40,9 @@ extension SibionicsCGMManager {
                 self.isReconnecting = false
                 self.reconnectAttempt = nil
             }
+            // Taken before the handshake: `.status` delivers the sensor's cached
+            // latest record as live, which moves the watermark past the gap.
+            let resumeAfter = self.state.lastIngestedSequence
             var failures = 0
             while !Task.isCancelled, !self.isDeleted, !self.hasLiveLink {
                 do {
@@ -57,7 +60,7 @@ extension SibionicsCGMManager {
                     default:
                         throw PairingError.driver(Self.describe(outcome))
                     }
-                    self.backfill(after: self.state.lastIngestedSequence)
+                    self.backfill(after: resumeAfter ?? self.state.lastIngestedSequence)
                     self.logger.debug("reconnect succeeded after \(failures) failure(s)")
                     return
                 } catch {
