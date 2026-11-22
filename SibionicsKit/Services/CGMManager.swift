@@ -40,9 +40,6 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
     /// loop stays out: its `Status` would log in with the old session and hide
     /// a refusal of the new id.
     var credentialPairings = 0
-    /// The sensor refused the account id the user entered. No reconnect with
-    /// the old session until the id changes again.
-    var credentialRefused = false
     private(set) var isDeleted = false
 
     /// Alert bookkeeping for `CGMManager+Alerts`.
@@ -95,6 +92,14 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
     }
 
     public var isInoperable: Bool { state.sensorNeedsReplacement }
+
+    /// Why the app cannot talk to the sensor, in full, for the settings screen;
+    /// the home screen shows only "Communication Error". `nil` when nothing is
+    /// known to be wrong (an out-of-range sensor is signal loss, not this).
+    public var communicationError: String? {
+        guard state.mac != nil, state.accountRefused else { return nil }
+        return String(describing: PairingError.accountRefused)
+    }
 
     public var inSensorWarmup: Bool {
         if case .warmup = sensorLifecycle { return true }
@@ -182,7 +187,12 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
         recentSamples = initialState.recentSamples
         accountID = initialState.accountID ?? SibionicsKeychain.loadAccountID()
         if state.mac != nil {
-            Task { @MainActor in self.scheduleReconnect() }
+            Task { @MainActor in
+                // No link is coming while the id stands refused, so the clock
+                // has to run for signal loss to be raised.
+                if self.state.accountRefused { self.startAlertTicker() }
+                self.scheduleReconnect()
+            }
         }
     }
 
@@ -335,13 +345,20 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
     /// Credentials changed, so the live link is authenticating with the wrong
     /// ones. Dropping it makes the normal reconnect loop try again; nothing is
     /// written to the sensor by doing so.
+    @MainActor func setAccountRefused(_ refused: Bool) {
+        guard state.accountRefused != refused else { return }
+        var updated = state
+        updated.accountRefused = refused
+        setState(updated)
+    }
+
     @MainActor func reauthenticateAfterCredentialChange() {
         guard state.mac != nil, let peripheralID = state.peripheralID else { return }
         // The engine authenticates with the account id in its own session, so
         // a new id needs a new `Pair`. It never starts a started sensor, and
         // the known start time skips the question.
         logger.info("credentials changed; pairing again to re-authenticate")
-        credentialRefused = false
+        setAccountRefused(false)
         credentialPairings += 1
         dropLink()
         Task { @MainActor in
@@ -357,7 +374,8 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
             self.credentialPairings -= 1
             guard let failure else { return }
             if case .accountRefused? = failure as? PairingError {
-                self.credentialRefused = true
+                self.setAccountRefused(true)
+                self.startAlertTicker()
                 self.logger.info("account id refused; not reconnecting until it changes")
             } else {
                 self.scheduleReconnect()

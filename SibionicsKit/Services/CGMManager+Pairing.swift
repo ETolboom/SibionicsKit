@@ -61,6 +61,7 @@ public extension SibionicsCGMManager {
             throw PairingError.driver(Self.describe(outcome))
         }
         onStage(.startingSession)
+        setAccountRefused(false)
         if let credential = String(data: report.credential, encoding: .utf8), credential != accountID {
             SibionicsKeychain.saveAccountID(credential)
             accountID = credential

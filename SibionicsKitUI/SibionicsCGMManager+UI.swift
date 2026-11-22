@@ -45,6 +45,20 @@ extension SibionicsCGMManager: @retroactive CGMManagerUI {
     public var smallImage: UIImage? { Self.onboardingImage }
 
     public var cgmStatusHighlight: DeviceStatusHighlight? {
+        // The reason is in Sibionics settings; the home screen only says that
+        // something stops the app talking to the sensor. A failed or expired
+        // sensor outranks it: that needs a new sensor whatever the id is.
+        if communicationError != nil {
+            switch sensorLifecycle {
+            case .noSensor, .failed, .expired: break
+            case .warmup, .active, .signalLost:
+                return SibionicsStatusHighlight(
+                    localizedMessage: String(localized: "Comm.\nError", comment: "Status highlight: the app cannot talk to the sensor"),
+                    imageName: "exclamationmark.circle.fill",
+                    state: .critical
+                )
+            }
+        }
         switch sensorLifecycle {
         case .noSensor:
             return nil

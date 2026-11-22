@@ -81,7 +81,7 @@ extension SibionicsCGMManager {
         case let .refused(refusal): return "refused: \(refusal)"
         case .failed(.keyRejected):
             return LocalizedString(
-                "The sensor refused this account id — it was started with a different one.",
+                "The sensor refused to connect with this account ID. Please check if the account ID matches the one you started the sensor with.",
                 comment: "Pairing: key rejected"
             )
         case .failed(.wrongDevice):
@@ -124,8 +124,12 @@ extension SibionicsCGMManager {
             case .signalLost:
                 // The stale-link watchdog: no records for six minutes means a
                 // zombie link; drop it so the reconnect starts afresh.
-                logger.debug("no records for six minutes; forcing a reconnect")
-                engine?.disconnect()
+                if state.accountRefused {
+                    logger.debug("no records for six minutes; not reconnecting: account id refused")
+                } else {
+                    logger.debug("no records for six minutes; forcing a reconnect")
+                    engine?.disconnect()
+                }
             default:
                 break
             }

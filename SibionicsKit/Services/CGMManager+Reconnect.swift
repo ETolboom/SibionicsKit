@@ -24,7 +24,7 @@ extension SibionicsCGMManager {
     /// readings missed since the watermark are fetched.
     @MainActor func scheduleReconnect() {
         guard !isDeleted, !hasLiveLink, reconnectAttempt == nil,
-              credentialPairings == 0, !credentialRefused else { return }
+              credentialPairings == 0, !state.accountRefused else { return }
         guard let record = state.sensors.active, let peripheralID = record.peripheralID else {
             if state.mac != nil {
                 updateStatusDetail(LocalizedString(

@@ -10,6 +10,7 @@ public final class SibionicsCGMState: ObservableObject {
     @Published public private(set) var latestSample: GlucoseSample?
     @Published public private(set) var lifecycle: SibionicsSensorLifecycle = .noSensor
     @Published public private(set) var statusDetail: String?
+    @Published public private(set) var communicationError: String?
 
     private weak var manager: SibionicsCGMManager?
     private var pollTimer: Timer?
@@ -20,6 +21,7 @@ public final class SibionicsCGMState: ObservableObject {
         latestSample = manager.latestSample
         lifecycle = manager.sensorLifecycle
         statusDetail = manager.statusDetail
+        communicationError = manager.communicationError
         manager.addStateObserver(self)
         // `sensorLifecycle` is time-derived (warmup ends, readings go stale), so
         // it has to be re-read even when nothing changed.
@@ -60,6 +62,7 @@ public final class SibionicsCGMState: ObservableObject {
         latestSample = manager.latestSample
         lifecycle = manager.sensorLifecycle
         statusDetail = manager.statusDetail
+        communicationError = manager.communicationError
     }
 
     public func setAccountID(_ id: String) throws {

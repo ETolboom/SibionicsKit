@@ -150,18 +150,29 @@ struct SibionicsSettingsView: View {
         }
     }
 
-    private var statusTitle: String {
+    /// Shown in place of the lifecycle summary, as the home screen's
+    /// "Communication Error" does; a failed or expired sensor still wins.
+    private var communicationError: String? {
         switch model.lifecycle {
-        case .noSensor: return "No Sensor"
-        case .warmup: return "Warming Up"
-        case .active: return "Sensor OK"
-        case .expired: return "Sensor Expired"
-        case .signalLost: return "Signal Loss"
-        case .failed: return "Sensor Problem"
+        case .noSensor, .failed, .expired: return nil
+        case .warmup, .active, .signalLost: return model.communicationError
+        }
+    }
+
+    private var statusTitle: String {
+        if communicationError != nil { return "Communication Error" }
+        return switch model.lifecycle {
+        case .noSensor: "No Sensor"
+        case .warmup: "Warming Up"
+        case .active: "Sensor OK"
+        case .expired: "Sensor Expired"
+        case .signalLost: "Signal Loss"
+        case .failed: "Sensor Problem"
         }
     }
 
     private var statusMessage: String {
+        if let communicationError { return communicationError }
         switch model.lifecycle {
         case .noSensor:
             return "Pair a sensor to start reading."
@@ -181,6 +192,7 @@ struct SibionicsSettingsView: View {
     }
 
     private var statusIcon: String {
+        if communicationError != nil { return "exclamationmark.circle.fill" }
         switch model.lifecycle {
         case .noSensor: return "sensor.fill"
         case .warmup: return "clock"
@@ -192,6 +204,7 @@ struct SibionicsSettingsView: View {
     }
 
     private var statusColor: Color {
+        if communicationError != nil { return guidanceColors.critical }
         switch model.lifecycle {
         case .active: return .green
         case .expired,

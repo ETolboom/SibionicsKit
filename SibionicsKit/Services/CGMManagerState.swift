@@ -19,6 +19,10 @@ public struct CGMManagerState: RawRepresentable, Equatable {
     public static let recentSamplesPersistenceCap = 12
 
     public var sensorFault: SibionicsSensorFault.Kind?
+    /// The sensor refused the account id. Kept across restarts so the app does
+    /// not quietly log in with an older session; cleared when the id changes
+    /// or a pairing succeeds.
+    public var accountRefused = false
     public var sensorNeedsReplacement: Bool { sensorFault != nil }
 
     /// Warmup and wear. Assumed defaults until confirmed on hardware; the user
@@ -65,6 +69,7 @@ public struct CGMManagerState: RawRepresentable, Equatable {
         if let kind = rawValue["sensorFault"] as? String, kind == "implausible" {
             sensorFault = .signalImplausible
         }
+        accountRefused = rawValue["accountRefused"] as? Bool ?? false
         warmup = rawValue["warmup"] as? Double ?? SibionicsDeviceInfo.defaultWarmup
         activeDuration = rawValue["activeDuration"] as? Double ?? SibionicsDeviceInfo.defaultActiveDuration
         if let key = rawValue["registrationKey"] as? Data, key.count == 16 {
@@ -88,6 +93,7 @@ public struct CGMManagerState: RawRepresentable, Equatable {
             raw["recentSamples"] = recentSamples.prefix(Self.recentSamplesPersistenceCap).map(\.rawValue)
         }
         if sensorFault == .signalImplausible { raw["sensorFault"] = "implausible" }
+        if accountRefused { raw["accountRefused"] = true }
         return raw
     }
 
