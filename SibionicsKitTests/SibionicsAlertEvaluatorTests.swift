@@ -10,15 +10,32 @@ final class SibionicsAlertEvaluatorTests: XCTestCase {
         paired: Bool = true,
         lastReadingAge: TimeInterval? = 60,
         fault: SibionicsSensorFault.Kind? = nil,
-        expired: Bool = false
+        expired: Bool = false,
+        sinceLaunch: TimeInterval? = nil
     ) -> Set<SibionicsAlert> {
         SibionicsAlertEvaluator.dueAlerts(
             sensorPaired: paired,
             latestReadingAt: lastReadingAge.map { now.addingTimeInterval(-$0) },
             reportedFault: fault,
             expired: expired,
+            launchedAt: sinceLaunch.map { now.addingTimeInterval(-$0) },
             now: now
         )
+    }
+
+    /// After a long quit the last reading is hours old; signal loss waits for
+    /// the first reconnect instead of flashing at launch.
+    func testSignalLossWaitsOutTheLaunchGrace() {
+        XCTAssertEqual(due(lastReadingAge: 9 * 3600, sinceLaunch: 2), [])
+        XCTAssertEqual(due(lastReadingAge: 9 * 3600, sinceLaunch: 2 * 60 - 1), [])
+        XCTAssertEqual(due(lastReadingAge: 9 * 3600, sinceLaunch: 2 * 60), [.signalLoss])
+    }
+
+    /// The grace is only for signal loss: a dead or expired sensor is known
+    /// without a connection.
+    func testLaunchGraceDoesNotDelayFailedOrExpired() {
+        XCTAssertEqual(due(fault: .signalImplausible, sinceLaunch: 2), [.sensorFailed])
+        XCTAssertEqual(due(expired: true, sinceLaunch: 2), [.sensorExpired])
     }
 
     func testQuietWhenEverythingIsFine() {

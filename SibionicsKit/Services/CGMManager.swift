@@ -40,6 +40,8 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
     /// loop stays out: its `Status` would log in with the old session and hide
     /// a refusal of the new id.
     var credentialPairings = 0
+    /// For the signal-loss grace after launch (`SibionicsAlertEvaluator.launchGrace`).
+    let launchedAt = Date()
     private(set) var isDeleted = false
 
     /// Alert bookkeeping for `CGMManager+Alerts`.
@@ -188,9 +190,10 @@ public final class SibionicsCGMManager: CGMManager, @unchecked Sendable {
         accountID = initialState.accountID ?? SibionicsKeychain.loadAccountID()
         if state.mac != nil {
             Task { @MainActor in
-                // No link is coming while the id stands refused, so the clock
-                // has to run for signal loss to be raised.
-                if self.state.accountRefused { self.startAlertTicker() }
+                // The clock runs from launch, not from the first link: signal
+                // loss must still be raised when no link ever comes (out of
+                // range, a refused account id), and once the launch grace ends.
+                self.startAlertTicker()
                 self.scheduleReconnect()
             }
         }

@@ -64,17 +64,25 @@ public enum SibionicsAlertEvaluator {
     /// Long enough that a normal reconnect or a couple of skipped packets does
     /// not fire it; short enough to be useful. Matches the sibling kits.
     public static let signalLossAfter: TimeInterval = 20 * 60
+    /// After launch, how long signal loss waits for the first reconnect. The
+    /// last reading is old after any long quit, so without this the alert is
+    /// raised before the app has tried to connect and withdrawn seconds later.
+    /// Two minutes covers a slow connect (one timed out after 79 s).
+    public static let launchGrace: TimeInterval = 2 * 60
 
     /// - Parameters:
     ///   - sensorPaired: a sensor is stored, so these alerts are meaningful.
     ///   - latestReadingAt: when the last record arrived; nil before the first.
     ///   - reportedFault: the driver's own verdict that the sensor is dead.
     ///   - expired: the wear window is over.
+    ///   - launchedAt: when the app started; signal loss waits `launchGrace`
+    ///     after it. `nil` applies no grace.
     public static func dueAlerts(
         sensorPaired: Bool,
         latestReadingAt: Date?,
         reportedFault: SibionicsSensorFault.Kind?,
         expired: Bool,
+        launchedAt: Date? = nil,
         now: Date = Date()
     ) -> Set<SibionicsAlert> {
         guard sensorPaired else { return [] }
@@ -85,7 +93,8 @@ public enum SibionicsAlertEvaluator {
 
         // Signal loss says nothing useful once the sensor is known to be gone:
         // it would only be a second alert for the same event.
-        if due.isEmpty, let last = latestReadingAt, now.timeIntervalSince(last) >= signalLossAfter {
+        let settled = launchedAt.map { now.timeIntervalSince($0) >= launchGrace } ?? true
+        if due.isEmpty, settled, let last = latestReadingAt, now.timeIntervalSince(last) >= signalLossAfter {
             due.insert(.signalLoss)
         }
         return due

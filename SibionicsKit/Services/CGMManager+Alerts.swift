@@ -49,6 +49,7 @@ extension SibionicsCGMManager {
             latestReadingAt: state.latestReadingTimestamp,
             reportedFault: state.sensorFault,
             expired: expired,
+            launchedAt: launchedAt,
             now: now
         )
         guard due != raisedAlerts else { return }
