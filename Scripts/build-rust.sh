@@ -4,12 +4,12 @@
 #   Rust/CgmSibionicsFFI.xcframework                 static library for iOS, iOS simulator, macOS
 #   SibionicsKit/Rust/Generated/cgm_sibionics_ffi.swift   UniFFI Swift bindings (compiled into SibionicsKit)
 #
-# Usage: Scripts/build-rust.sh [path/to/cgm-sibionics]   (default ../../../u-osaid/cgm-sibionics)
+# Usage: Scripts/build-rust.sh [path/to/cgm-sibionics]   (default "../../../Unified OS-AID/cgm-sibionics")
 # Needs rustup targets aarch64-apple-ios, aarch64-apple-ios-sim, x86_64-apple-ios, aarch64-apple-darwin.
 set -eu
 
 here="$(cd "$(dirname "$0")/.." && pwd)"
-crate="$(cd "${1:-$here/../../../u-osaid/cgm-sibionics}" && pwd)"
+crate="$(cd "${1:-$here/../../../Unified OS-AID/cgm-sibionics}" && pwd)"
 out="$here/SibionicsKit/Rust"
 framework="$here/Rust/CgmSibionicsFFI.xcframework"
 lib=libcgm_sibionics_ffi.a

@@ -13,9 +13,9 @@ Trio / Loop CGM driver for **Sibionics GS3** sensors, V3 firmware.
 
 ## On the `rust-engine` branch: the Rust driver
 
-On this branch the protocol runs in Rust: [`cgm-sibionics`](https://github.com/u-osaid/cgm-sibionics)
+On this branch the protocol runs in Rust: [`cgm-sibionics`](https://github.com/open-source-aid/cgm-sibionics)
 (sans-IO, written to the OS-AID driver guideline, on the
-[`cgm-shared`](https://github.com/u-osaid/cgm-shared) contract). The Swift session,
+[`cgm-shared`](https://github.com/open-source-aid/cgm-shared) contract). The Swift session,
 pairing service, monitor, trend tracker, plausibility guard, codec and cipher are gone;
 `main` keeps them.
 
@@ -29,7 +29,7 @@ pairing service, monitor, trend tracker, plausibility guard, codec and cipher ar
 Build the Rust library before building the kit:
 
 ```sh
-Scripts/build-rust.sh            # expects ../../../u-osaid/cgm-sibionics, or pass its path
+Scripts/build-rust.sh            # expects "../../../Unified OS-AID/cgm-sibionics", or pass its path
 swift test                       # bindings + remaining Swift tests
 ```
 
@@ -40,6 +40,9 @@ are unchanged (`sibionics-<mac>-<seq>`), so Trio deduplicates across the switch.
 
 The `sibionics-decode` capture decoder now lives with the driver: `cgm-sibionics/decode`
 (`cargo run -p cgm-sibionics-decode --bin sibionics-decode -- --mac … capture.pklg`).
+
+What is still open, and the plan for the sensor's end of life and the first activation
+by the Rust engine, is in [`OPEN-ITEMS.md`](OPEN-ITEMS.md).
 
 ## Why it exists
 
