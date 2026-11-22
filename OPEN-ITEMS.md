@@ -1,7 +1,7 @@
 # Open items
 
 The work list between this kit and a GS3 driver someone can dose from. State as
-of 2026-11-22, on the `rust-engine` branch.
+of 2026-11-22. The all-Swift driver is kept on the `swift-engine` branch.
 
 Where things live:
 
@@ -100,9 +100,9 @@ lost if the sensor is ended early.
    the runbook relies on: `sensor status`, `not forwarded:`, `flushing … backfilled`,
    `activating sensor`, `auth refused`.
 5. **Release mechanics:** write cgm-sibionics' CHANGELOG and tag `main`
-   (guideline 12); point this kit at the tag instead of a local checkout and
-   merge `rust-engine`; move Trio's SibionicsKit reference off the Swift driver
-   (`c73dbda`).
+   (guideline 12); point this kit at the tag instead of a local checkout; move
+   Trio's SibionicsKit reference off the Swift driver (`c73dbda`) to this kit's
+   `main`.
 6. **Licence:** cgm-sibionics is AGPL-3.0-or-later, this kit is MIT. Whether that
    can ship inside Trio on the App Store is open (cgm-sibionics README, Q8).
 

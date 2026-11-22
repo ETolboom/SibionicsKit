@@ -2,22 +2,25 @@
 
 Trio / Loop CGM driver for **Sibionics GS3** sensors, V3 firmware.
 
-> ### Status: draft, not usable for dosing
+> ### Status: experimental, not yet for dosing
 >
-> This is a scaffold built from static analysis of the official app plus a
-> protocol write-up. It has **never run against a real sensor**. The frame
-> layout, cipher and command opcodes are validated against independent
-> references (see [What is actually verified](#what-is-actually-verified)), but
-> the record semantics, ack status bytes and the BLE advertisement are not.
-> Do not let this drive insulin until someone has confirmed it on hardware.
+> The protocol runs in the Rust driver [`cgm-sibionics`](https://github.com/open-source-aid/cgm-sibionics),
+> a proof of concept for unified OS-AID drivers; this kit is the Trio adapter around
+> it. It has run on a GS3 in Trio since 2026-11-20: live readings and backfill match
+> the official app on every reading. Activating a new sensor and a sensor's end of life
+> have not been seen on hardware yet. What is open, and the plan to close it, is in
+> [`OPEN-ITEMS.md`](OPEN-ITEMS.md).
+>
+> The earlier all-Swift driver is kept on the `swift-engine` branch. Sections below
+> that name Swift session, monitor or cipher classes describe that driver.
 
-## On the `rust-engine` branch: the Rust driver
+## The Rust driver
 
-On this branch the protocol runs in Rust: [`cgm-sibionics`](https://github.com/open-source-aid/cgm-sibionics)
+The protocol runs in Rust: [`cgm-sibionics`](https://github.com/open-source-aid/cgm-sibionics)
 (sans-IO, written to the OS-AID driver guideline, on the
 [`cgm-shared`](https://github.com/open-source-aid/cgm-shared) contract). The Swift session,
 pairing service, monitor, trend tracker, plausibility guard, codec and cipher are gone;
-`main` keeps them.
+the `swift-engine` branch keeps them.
 
 | Piece | Where |
 |---|---|
