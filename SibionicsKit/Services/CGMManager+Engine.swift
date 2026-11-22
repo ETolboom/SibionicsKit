@@ -119,8 +119,10 @@ extension SibionicsCGMManager {
         case let .sensorStateChanged(sensorState):
             logger.debug("sensor state: \(Self.describe(sensorState))")
             switch sensorState {
-            case .failed:
-                markSensorFailed(SibionicsSensorFault(kind: .signalImplausible))
+            case let .failed(code):
+                // Codes from 0x100 are the sensor's own verdict (cgm-sibionics
+                // `FAILED_DEVICE + dstate`); below that, the engine's guard.
+                markSensorFailed(SibionicsSensorFault(kind: code >= 0x100 ? .sensorReported : .signalImplausible))
             case .signalLost:
                 // The stale-link watchdog: no records for six minutes means a
                 // zombie link; drop it so the reconnect starts afresh.

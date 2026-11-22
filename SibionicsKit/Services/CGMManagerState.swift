@@ -66,8 +66,10 @@ public struct CGMManagerState: RawRepresentable, Equatable {
         if let recentRaw = rawValue["recentSamples"] as? [[String: Any]] {
             recentSamples = recentRaw.compactMap(GlucoseSample.init(rawValue:))
         }
-        if let kind = rawValue["sensorFault"] as? String, kind == "implausible" {
-            sensorFault = .signalImplausible
+        switch rawValue["sensorFault"] as? String {
+        case "implausible": sensorFault = .signalImplausible
+        case "sensorReported": sensorFault = .sensorReported
+        default: break
         }
         accountRefused = rawValue["accountRefused"] as? Bool ?? false
         warmup = rawValue["warmup"] as? Double ?? SibionicsDeviceInfo.defaultWarmup
@@ -92,7 +94,11 @@ public struct CGMManagerState: RawRepresentable, Equatable {
         if !recentSamples.isEmpty {
             raw["recentSamples"] = recentSamples.prefix(Self.recentSamplesPersistenceCap).map(\.rawValue)
         }
-        if sensorFault == .signalImplausible { raw["sensorFault"] = "implausible" }
+        switch sensorFault {
+        case .signalImplausible: raw["sensorFault"] = "implausible"
+        case .sensorReported: raw["sensorFault"] = "sensorReported"
+        case nil: break
+        }
         if accountRefused { raw["accountRefused"] = true }
         return raw
     }

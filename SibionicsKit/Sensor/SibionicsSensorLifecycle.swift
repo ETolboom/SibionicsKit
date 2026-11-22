@@ -73,6 +73,11 @@ public enum SibionicsSensorLifecycle: Equatable {
                 "Sensor readings implausible, consider replacing sensor",
                 comment: "Status: implausible readings"
             )
+        case .sensorReported:
+            return LocalizedString(
+                "The sensor reported a failure. Replace the sensor.",
+                comment: "Status: the sensor reported a failure"
+            )
         }
     }
 }

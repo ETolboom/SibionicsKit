@@ -8,6 +8,9 @@ public struct SibionicsSensorFault: Equatable, Sendable {
         /// caught from the data stream. Terminal; persisted; ending the sensor
         /// stays user-confirmed.
         case signalImplausible
+        /// The sensor itself reported a failure in its status (`dstate` 3 or 5,
+        /// the official app's "Sensor Failed"). Terminal; persisted.
+        case sensorReported
     }
 
     public let kind: Kind
