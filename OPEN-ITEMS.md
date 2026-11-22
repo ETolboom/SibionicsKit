@@ -5,7 +5,7 @@ of 2026-11-22, on the `rust-engine` branch.
 
 Where things live:
 
-* **Driver:** `cgm-sibionics` (Rust, `diagnostic-logging` branch), built into
+* **Driver:** `cgm-sibionics` (Rust, `main`), built into
   `Rust/CgmSibionicsFFI.xcframework` with `Scripts/build-rust.sh`. Its README
   lists the known limitations and deliberate deviations from the official app;
   its `.docs/to-confirm.md` lists what is unconfirmed (guideline S16).
@@ -94,11 +94,16 @@ lost if the sensor is ended early.
 3. **A few days of open loop** on the new sensor, comparing Trio's
    recommendations with the official app and your own judgement, before
    closing the loop.
-4. **Release mechanics:** merge cgm-sibionics `diagnostic-logging` into `main`,
-   write its CHANGELOG and tag it (guideline 12); point this kit at the tag
-   instead of a local checkout and merge `rust-engine`; move Trio's SibionicsKit
-   reference off the Swift driver (`c73dbda`).
-5. **Licence:** cgm-sibionics is AGPL-3.0-or-later, this kit is MIT. Whether that
+4. **Remove the extra diagnostic logging** once the 29 Nov tests are done: the
+   engine logs every record, history page and ack (cgm-sibionics `b6fb12f`), and
+   this kit logs every glucose reading with its decision (`372b596`). Keep what
+   the runbook relies on: `sensor status`, `not forwarded:`, `flushing … backfilled`,
+   `activating sensor`, `auth refused`.
+5. **Release mechanics:** write cgm-sibionics' CHANGELOG and tag `main`
+   (guideline 12); point this kit at the tag instead of a local checkout and
+   merge `rust-engine`; move Trio's SibionicsKit reference off the Swift driver
+   (`c73dbda`).
+6. **Licence:** cgm-sibionics is AGPL-3.0-or-later, this kit is MIT. Whether that
    can ship inside Trio on the App Store is open (cgm-sibionics README, Q8).
 
 ---
